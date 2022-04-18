@@ -1,0 +1,11 @@
+## Files from S.O use for previews
+.DS_Store
+Thumbs.db
+
+## Folders that use for configs or save a lot of files.
+/node_modules
+/src/config/*
+/src/logs/*
+
+# exeptions files and folders.
+!/src/config/*.*_example
