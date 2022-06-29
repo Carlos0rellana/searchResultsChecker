@@ -55,7 +55,7 @@ const urlFormating = (url: string): string | null => {
   if (url.includes('https://origin.')) {
     return crossWeb + url.slice(14)
   }
-  if (url.includes('https://origin.')) {
+  if (url.includes('http://origin.')) {
     return crossWeb + url.slice(13)
   }
   return null
