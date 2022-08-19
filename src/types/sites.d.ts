@@ -13,6 +13,12 @@ interface Properties{
   gtmID?: string
   feedLanguage?: string
   dateLocalization?: Location
+  searchId?: string | null = null
+}
+
+export interface identitySearch {
+  siteId: string
+  storyTitle: string
 }
 
 export interface Site{

@@ -1,6 +1,11 @@
 import { google, sheets_v4 } from 'googleapis'
 import { GoogleAuth } from 'googleapis-common'
-import { linkValues } from '../types/urlToVerify'
+
+import { linkValues, modLinkValues } from '../types/urlToVerify'
+import { msgProgressBar } from '../types/progressBarMsgs'
+
+import cliProgress from 'cli-progress'
+import colors from 'ansi-colors'
 
 const googleInfo = {
   keyFile: './src/config/googleAccess.json',
@@ -50,15 +55,15 @@ export const createGoogleSheet = async (arr: linkValues[], sheetname: string, sp
     const auth = new google.auth.GoogleAuth(googleInfo)
     const sheets = await google.sheets('v4')
     const tempArray: string[][] = []
-    tempArray.push(['URL', 'httpStatus', 'typeOfUrl', 'outputType', 'problems', 'possibleSolution', 'status'])
+    tempArray.push(['URL', 'httpStatus', 'typeOfUrl', 'outputType', 'solution', 'method', 'status'])
     for (let index = 0; index < arr.length; index++) {
       tempArray.push([
         String(arr[index].url),
         String(arr[index].httpStatus),
         String(arr[index].typeOfUrl),
         String(arr[index].outputType),
-        String(arr[index].problemLists),
-        String(arr[index].possibleSolution),
+        String(arr[index].probableSolution),
+        String(arr[index].solution),
         arr[index].status
       ])
     }
@@ -97,8 +102,8 @@ export const updateRowData = async (spreadSheetId: string, sheetName: string, po
         dataValues.httpStatus,
         dataValues.typeOfUrl,
         dataValues.outputType,
-        dataValues.problemLists,
-        dataValues.possibleSolution,
+        dataValues.probableSolution,
+        dataValues.solution?.join(),
         dataValues.status
       ]]
     },
@@ -106,6 +111,31 @@ export const updateRowData = async (spreadSheetId: string, sheetName: string, po
   }
   const result = await sheets.spreadsheets.values.update(requestForData)
   return result
+}
+
+export const updateAgroupOfValuesInSheet = async (sheetId: string, urlListToMod: modLinkValues[], textForBar: msgProgressBar): Promise<boolean> => {
+  if (urlListToMod.length > 0) {
+    const progressRevision = new cliProgress.SingleBar({
+      format: `${textForBar.description} | ${colors.green('{bar}')} | {percentage}% || {value}/{total} ${textForBar.nameItems}`,
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2591',
+      hideCursor: true
+    })
+    let progressCount: number = 1
+    progressRevision.start(urlListToMod.length, 0)
+    for (const item of urlListToMod) {
+      if (item.url !== null) {
+        const externalLink: linkValues = item as linkValues
+        await updateRowData(sheetId, 'Output', item.position, externalLink)
+      }
+      progressRevision.update(progressCount)
+      progressCount++
+    }
+    progressRevision.stop()
+    return true
+  } else {
+    return false
+  }
 }
 
 const createNewSheet = async (sheets: sheets_v4.Sheets, spreadsheetId: string, sheetname: string, auth: GoogleAuth): Promise<boolean> => {
