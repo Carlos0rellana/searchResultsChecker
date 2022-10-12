@@ -1,8 +1,8 @@
 import express from 'express'
 import asyncHandler from 'express-async-handler'
 import { checkUrlsStatusFromSheets } from '../services/getHttpAndTypesOfUrl'
-import { checkAuthorInOutput, check404inGoogle, checkRedirectsFromSheets, checkByDatesFromSheets, checkTagsFromSheets, checkUrlInDBFromSheets, checkUrlInGoogleFromSheets, checkUrlInArcRedirectsFromSheets } from '../services/checkingDataFromSheets'
-import { deleteRedirectsFromSheets, proccessRedirectsFromSheets } from '../services/processDataFromSheets'
+import { checkAuthorInOutput, check404inGoogle, checkRedirectsFromSheets, checkByDatesFromSheets, checkTagsFromSheets, checkUrlInDBFromSheets, checkUrlInGoogleFromSheets, checkUrlInArcRedirectsFromSheets, checkTagInArcFromSheets } from '../services/checkingDataFromSheets'
+import { deleteRedirectsFromSheets, proccessRedirectsFromSheets, proccessTagsFromSheets } from '../services/processDataFromSheets'
 
 export const showGoogleSheets = express.Router()
 export const checkAuthors = express.Router()
@@ -18,7 +18,7 @@ checkStories.get('/:documentID/check/stories', asyncHandler(async (req, res) => 
   res.send(values)
 }))
 
-checkStories.get('/:documentID/check/redirect', asyncHandler(async (req, res) => {
+checkStories.get('/:documentID/check/redirects', asyncHandler(async (req, res) => {
   const values = await checkRedirectsFromSheets(req.params.documentID)
   res.send(values)
 }))
@@ -33,13 +33,18 @@ checkStories.get('/:documentID/search/google', asyncHandler(async (req, res) => 
   res.send(values)
 }))
 
-checkStories.get('/:documentID/search/sitemap', asyncHandler(async (req, res) => {
+checkStories.get('/:documentID/search/sitemaps', asyncHandler(async (req, res) => {
   const values = await checkByDatesFromSheets(req.params.documentID)
   res.send(values)
 }))
 
-checkStories.get('/:documentID/search/arc', asyncHandler(async (req, res) => {
+checkStories.get('/:documentID/search/redirects', asyncHandler(async (req, res) => {
   const values = await checkUrlInArcRedirectsFromSheets(req.params.documentID)
+  res.send(values)
+}))
+
+checkStories.get('/:documentID/search/tags', asyncHandler(async (req, res) => {
+  const values = await checkTagInArcFromSheets(req.params.documentID)
   res.send(values)
 }))
 
@@ -48,12 +53,17 @@ checkStories.get('/:documentID/check/tags', asyncHandler(async (req, res) => {
   res.send(values)
 }))
 
-checkStories.get('/:documentID/process/redirect', asyncHandler(async (req, res) => {
+checkStories.get('/:documentID/process/redirects', asyncHandler(async (req, res) => {
   const values = await proccessRedirectsFromSheets(req.params.documentID)
   res.send(values)
 }))
 
-checkStories.get('/:documentID/delete/redirect', asyncHandler(async (req, res) => {
+checkStories.get('/:documentID/process/tags', asyncHandler(async (req, res) => {
+  const values = await proccessTagsFromSheets(req.params.documentID)
+  res.send(values)
+}))
+
+checkStories.get('/:documentID/delete/redirects', asyncHandler(async (req, res) => {
   const values = await deleteRedirectsFromSheets(req.params.documentID)
   res.send(values)
 }))

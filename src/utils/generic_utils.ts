@@ -82,11 +82,22 @@ const getOutputTypeFromUrl = (url: string): string => {
   return outputType
 }
 
+export const sanitizePathToWWWWpath = (url: string, protocol: string|null = null): string => {
+  const formatToUrl = new URL(url)
+  let hostRoute = formatToUrl.hostname.replace('origin.', 'www.').replace('touch.', 'www.').replace('dev.', 'www.').replace('showbiz.', 'www.').replace('juegos.', 'www.').replace('mov.', 'www.')
+  if (hostRoute.match('www.') === null) {
+    hostRoute = `www.${hostRoute}`
+  }
+  const pre = protocol === null ? 'https://' : protocol
+  return (pre + hostRoute + formatToUrl.pathname)
+}
+
 export const geIdentiflyUrl = (url: string): identitySearch => {
   const site: identitySearch = {
     siteId: '',
     storyTitle: ''
   }
+  url = sanitizePathToWWWWpath(url)
   const URI = new URL(url)
   const segmentedUrl = URI.pathname.split('/')
   const roxen = /\/[\w]*\b!\b[\w]*\//
@@ -94,8 +105,9 @@ export const geIdentiflyUrl = (url: string): identitySearch => {
   const video = /\/video\/$/
   const attachment = /\/attachment\/(.*)?\/?$/
   Object.entries(sitesData).forEach((element) => {
+    // console.log(URI)
     const currenturl = element[1].siteProperties.feedDomainURL
-    if (currenturl.includes(URI.hostname.replace('origin.', 'www.').replace('touch.', 'www.'))) {
+    if (`${URI.protocol}//${URI.hostname}` === currenturl) {
       site.siteId = element[0]
     }
   })
@@ -113,6 +125,9 @@ export const geIdentiflyUrl = (url: string): identitySearch => {
     site.storyTitle = segmentedUrl[segmentedUrl.length - 1]
   }
   site.storyTitle = site.storyTitle.replace(/.html$/, '')
+  if (site.siteId === '') {
+    console.log('This fail =====>', url)
+  }
   return site
 }
 

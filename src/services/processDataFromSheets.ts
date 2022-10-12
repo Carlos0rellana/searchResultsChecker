@@ -6,6 +6,7 @@ import { linkValues, modLinkValues } from '../types/urlToVerify'
 import cliProgress from 'cli-progress'
 import colors from 'ansi-colors'
 import { deleteRedirect, makeRedirect } from '../subscribers/arcRedirects'
+import { makeAtagByslug } from '../subscribers/arcTags'
 
 // const allSites: SitesList = sitesData as SitesList
 
@@ -23,21 +24,28 @@ export const proccessRedirectsFromSheets = async (sheetId: string): Promise<link
       hideCursor: true
     })
     if (rows !== undefined && rows !== null) {
-      let progressCount: number = 1
+      let progressCount: number = 0
       let key: number = 0
       for (const urlValidate of rows) {
         const rowData: modLinkValues = getSimpleLinkValues(urlValidate, key)
-        if (rowData.status === 'process' && rowData.solution?.includes('redirect') !== false && rowData.httpStatus === 404) {
+        if (rowData.status === 'process' &&
+            rowData.solution?.includes('redirect') !== false &&
+            rowData.httpStatus !== null &&
+            rowData.httpStatus > 400) {
           rowsOfRedirect.push(rowData)
         }
         key++
       }
       progressRevision.start(rowsOfRedirect.length, 0)
       for (const item of rowsOfRedirect) {
-        if (item.url !== null && item.url !== 'undefined' && item.url.length > 5 && item.solution !== null && item.probableSolution !== null) {
+        if (item.url !== null &&
+            item.url !== 'undefined' &&
+            item.url.length > 5 &&
+            item.solution !== null &&
+            item.probableSolution !== null) {
           const URI = new URL(item.url)
           const earlyUrl = geIdentiflyUrl(item.url)
-          const externalLink: linkValues = item as linkValues
+          const externalLink = item as linkValues
           const redirectTo: string = item.probableSolution
           const originPath: string = URI.pathname
           firstRedirect = await makeRedirect(earlyUrl.siteId, originPath, redirectTo)
@@ -48,12 +56,61 @@ export const proccessRedirectsFromSheets = async (sheetId: string): Promise<link
           }
           if (await firstRedirect !== false || await lastRedirect !== false) {
             externalLink.status = 'waiting-ok'
-            externalLink.solution = ['redirect']
             await updateRowData(sheetId, 'Output', item.position, externalLink)
           }
         }
-        progressRevision.update(progressCount)
         progressCount++
+        progressRevision.update(progressCount)
+      }
+      progressRevision.stop()
+    }
+    return urlList
+  } catch (_error) {
+    // console.error(error)
+    return null
+  }
+}
+
+export const proccessTagsFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
+  try {
+    const urlList: linkValues[] = []
+    const rows = await accessToGoogleSheets(sheetId, 'Output')
+    const rowsOfRedirect: modLinkValues[] = []
+    const progressRevision = new cliProgress.SingleBar({
+      format: `Tags Progress | ${colors.green('{bar}')} | {percentage}% || {value}/{total} Tags`,
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2591',
+      hideCursor: true
+    })
+    if (rows !== undefined && rows !== null) {
+      let progressCount: number = 1
+      let key: number = 0
+      for (const urlValidate of rows) {
+        const rowData: modLinkValues = getSimpleLinkValues(urlValidate, key)
+        if (rowData.status === 'process' &&
+            rowData.typeOfUrl === 'tag' &&
+            rowData.solution?.includes('create') !== false &&
+            rowData.httpStatus !== null &&
+            rowData.httpStatus > 400) {
+          rowsOfRedirect.push(rowData)
+        }
+        key++
+      }
+      progressRevision.start(rowsOfRedirect.length, 0)
+      for (const item of rowsOfRedirect) {
+        if (item.url !== null &&
+            item.url !== 'undefined' &&
+            item.url.length > 5 &&
+            item.solution !== null &&
+            item.probableSolution !== null) {
+          const externalLink = item as linkValues
+          if (await makeAtagByslug(item.probableSolution) === true) {
+            externalLink.status = 'waiting-ok'
+            await updateRowData(sheetId, 'Output', item.position, externalLink)
+          }
+        }
+        progressCount++
+        progressRevision.update(progressCount)
       }
       progressRevision.stop()
     }

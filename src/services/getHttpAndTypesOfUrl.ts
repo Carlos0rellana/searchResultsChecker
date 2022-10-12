@@ -10,7 +10,7 @@ export const checkUrlsStatusFromSheets = async (sheetId: string): Promise<linkVa
     const urlList: linkValues[] = []
     const rows = await simpleRowData(await accessToGoogleSheets(sheetId, 'Table'), 'URL')
     const progressRevision = new cliProgress.SingleBar({
-      format: `HTTP Request Progress | ${colors.cyan('{bar}')} | {percentage}% || {value}/{total} Chunks || Speed: {speed}`,
+      format: `HTTP Request Progress | ${colors.cyan('{bar}')} | {percentage}% || {value}/{total} URL's`,
       barCompleteChar: '\u2588',
       barIncompleteChar: '\u2591',
       hideCursor: true

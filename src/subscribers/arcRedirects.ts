@@ -23,7 +23,7 @@ const axiosConfig = (siteId: string, url: string, data: string = '', method: str
   }
 }
 
-export const makeRedirect = async (siteId: string, urlToFrom: string, urlToGo: string): Promise<boolean|string> => {
+export const makeRedirect = async (siteId: string, urlToFrom: string, urlToGo: string): Promise<false|string> => {
   const hostName = allSites[siteId]?.siteProperties.feedDomainURL
   if (hostName !== undefined && urlToFrom.includes(hostName)) {
     const originPath = new URL(urlToFrom)

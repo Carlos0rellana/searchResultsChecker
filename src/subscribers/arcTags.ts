@@ -1,7 +1,7 @@
 import axios from 'axios'
 import * as access from '../config/tokenAccessArc.json'
 
-export const getTagById = async (tagId: string): Promise<boolean> => {
+export const getTagBySlug = async (tagId: string): Promise<boolean> => {
   const config = {
     method: 'get',
     url: `https://api.metroworldnews.arcpublishing.com/tags/v2/slugs?slugs=${tagId}`,
@@ -23,6 +23,34 @@ export const getTagById = async (tagId: string): Promise<boolean> => {
     })
     .catch(function (error) {
       console.log(error)
+      return false
+    })
+}
+
+export const makeAtagByslug = async (slugTag: string): Promise<any> => {
+  const data = JSON.stringify([
+    {
+      slug: slugTag
+    }
+  ])
+
+  const config = {
+    method: 'post',
+    url: 'https://api.metroworldnews.arcpublishing.com/tags/add/',
+    headers: {
+      Authorization: access.token,
+      'Content-Type': 'application/json'
+    },
+    data: data
+  }
+
+  return await axios(config)
+    .then(function (_response) {
+      // console.log(JSON.stringify(response.data))
+      return true
+    })
+    .catch(function (_error) {
+      // console.log(error)
       return false
     })
 }

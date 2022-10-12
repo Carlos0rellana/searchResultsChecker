@@ -2,7 +2,7 @@ import { accessToGoogleSheets, updateAgroupOfValuesInSheet, updateRowData } from
 import { filterOptions, linkValues, modLinkValues } from '../types/urlToVerify'
 import { checkredirect } from '../subscribers/getArticleRedirectFromPublimetroDB'
 import { searchInGoogleServiceApi } from '../subscribers/googleApiSearch'
-import { fetchData, geIdentiflyUrl, getSimpleLinkValues } from '../utils/generic_utils'
+import { fetchData, geIdentiflyUrl, getSimpleLinkValues, sanitizePathToWWWWpath } from '../utils/generic_utils'
 
 import cliProgress from 'cli-progress'
 import colors from 'ansi-colors'
@@ -12,6 +12,7 @@ import sitesData from '../config/static_data/blocks.json'
 import { checkRedirect } from '../subscribers/arcRedirects'
 import { searchInSitemapByDate } from '../subscribers/searchInSitemaps'
 import { msgProgressBar } from '../types/progressBarMsgs'
+import { getTagBySlug } from '../subscribers/arcTags'
 
 const allSites: SitesList = sitesData as SitesList
 
@@ -28,23 +29,39 @@ const filterByDate = async (rows: string[][]): Promise<modLinkValues[]> => {
     barIncompleteChar: '\u2591',
     hideCursor: true
   })
-  const datePattern = /[0-9]{4}\/[0-9]{2}\/[0-9]{2}/
+  const datePattern = /[0-9]{4}\/[0-9]{2}\/[0-9]{2}/g
+
   progressRevisionOfSearch.start(rows.length, 0)
   for (const urlValidate of rows) {
     const rowData: modLinkValues = getSimpleLinkValues(urlValidate, key)
     if (rowData.url !== null && rowData.status !== 'ok' && rowData.status === 'none' && rowData.httpStatus === 404) {
-      if (rowData.url?.match(datePattern) !== null) {
+      const dateArticle = rowData.url?.match(datePattern)
+      if (dateArticle !== null) {
         const date = datePattern.exec(rowData.url)
         const basicInfo = geIdentiflyUrl(rowData.url)
         const hostName = allSites[basicInfo.siteId]?.siteProperties.feedDomainURL
         if (hostName !== undefined && date !== null && basicInfo.storyTitle.length > 0) {
-          const feedUrl = `${hostName}/arc/outboundfeeds/sitemap/${date[0].replace(/\//g, '-')}?outputType=xml`
+          let dateFilter = date[0]
+          if (rowData.url.split(datePattern).length > 2) {
+            let myArray
+            while ((myArray = datePattern.exec(rowData.url)) !== null) {
+              dateFilter = myArray[0]
+            }
+          }
+          const feedUrl = `${hostName}/arc/outboundfeeds/sitemap/${dateFilter.replace(/\//g, '-')}?outputType=xml`
           const result = await searchInSitemapByDate(feedUrl, basicInfo.storyTitle)
           if (await result !== null) {
             rowData.solution = ['redirect']
             // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             rowData.probableSolution = hostName + result
-            rowData.status = 'date'
+            const year = Number(dateArticle[0].split('/')[0])
+            if (year >= 2022) {
+              rowData.status = 'arcTime'
+            } else if (year >= 2016) {
+              rowData.status = 'recent'
+            } else {
+              rowData.status = 'date'
+            }
             rowsOfRedirect.push(rowData)
           }
         }
@@ -173,7 +190,7 @@ const searchInRedirects = async (itemList: modLinkValues[]): Promise<modLinkValu
     progressRevisionOfSearch.start(itemList.length, 0)
     for (const linkData of itemList) {
       if (linkData.url !== null) {
-        const basicInfo = geIdentiflyUrl(linkData.url)
+        const basicInfo = geIdentiflyUrl(sanitizePathToWWWWpath(linkData.url))
         const urlBase: string = allSites[basicInfo.siteId].siteProperties.feedDomainURL as string
         const pathUrl = new URL(linkData.url)
         let arcRedirectSearch = await checkRedirect(basicInfo.siteId, pathUrl.pathname)
@@ -196,14 +213,48 @@ const searchInRedirects = async (itemList: modLinkValues[]): Promise<modLinkValu
             findUrl.push(linkData)
           }
         }
-        progressRevisionOfSearch.update(key)
         await delay(2000)
       }
       key++
+      progressRevisionOfSearch.update(key)
     }
     progressRevisionOfSearch.stop()
   }
   return findUrl
+}
+
+const searchTagsInArc = async (itemList: modLinkValues[]): Promise<modLinkValues[]> => {
+  console.log('\nStart to search in Arc:')
+  const findTags: modLinkValues[] = []
+  if (itemList.length > 0) {
+    let key: number = 0
+    const progressRevisionOfSearch = new cliProgress.SingleBar({
+      format: `Search Tags in Arc | ${colors.yellow('{bar}')} | {percentage}% || {value}/{total} URLs`,
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2591',
+      hideCursor: true
+    })
+    progressRevisionOfSearch.start(itemList.length, 0)
+    for (const tagItem of itemList) {
+      if (tagItem.url !== null) {
+        let tagSlug: string = tagItem.url.split(/\/tags?\//)[1]
+        tagSlug = tagSlug.match(/\//) !== null ? tagSlug.split('/')[0] : tagSlug
+        if (await getTagBySlug(tagSlug)) {
+          tagItem.solution = ['redirect']
+          tagItem.probableSolution = `/tag/${tagSlug}`
+        } else {
+          tagItem.solution = ['create']
+          tagItem.probableSolution = tagSlug
+        }
+        tagItem.status = 'process'
+        findTags.push(tagItem)
+      }
+      key++
+      progressRevisionOfSearch.update(key)
+    }
+    progressRevisionOfSearch.stop()
+  }
+  return findTags
 }
 
 export const checkAuthorInOutput = async (sheetId: string, filter: boolean = false): Promise<any> => {
@@ -304,7 +355,7 @@ export const checkRedirectsFromSheets = async (sheetId: string): Promise<linkVal
       let key: number = 0
       for (const urlValidate of rows) {
         const rowData: modLinkValues = getSimpleLinkValues(urlValidate, key)
-        if (rowData.status === 'process' && rowData.httpStatus === 404) {
+        if ((rowData.status === 'process' || rowData.status === 'waiting-ok') && rowData.httpStatus !== null && rowData.httpStatus > 400) {
           rowsOfRedirect.push(rowData)
         }
         key++
@@ -359,7 +410,7 @@ export const checkUrlInDBFromSheets = async (sheetId: string): Promise<linkValue
         }
         await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
       } else {
-        console.log('No se encontrarons links con fechas')
+        console.log('No se encontrarons links en base de datos de metro')
       }
     }
     return urlList
@@ -427,6 +478,35 @@ export const checkUrlInArcRedirectsFromSheets = async (sheetId: string): Promise
   }
 }
 
+export const checkTagInArcFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
+  try {
+    const urlList: linkValues[] = []
+    const rows = await accessToGoogleSheets(sheetId, 'Output')
+    if (await rows !== undefined && await rows !== null) {
+      const options: filterOptions = {
+        httpStatus: 400,
+        type: 'tag',
+        status: 'none'
+      }
+      const rowsOfTags = genericFilter(rows, options)
+      const rowsToSaveInSheet = await searchTagsInArc(rowsOfTags)
+      if (await rowsToSaveInSheet.length > 0) {
+        const barText: msgProgressBar = {
+          description: 'Update status URL in GoogleSheets',
+          nameItems: 'Celdas modificadas.'
+        }
+        await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
+      } else {
+        console.log('No se modificaron celdas.')
+      }
+    }
+    return urlList
+  } catch (error) {
+    console.error(error)
+    return null
+  }
+}
+
 export const checkByDatesFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
     const urlList: linkValues[] = []
@@ -459,18 +539,21 @@ export const checkTagsFromSheets = async (sheetId: string): Promise<linkValues[]
       const options: filterOptions = {
         httpStatus: 400,
         type: 'tag',
-        status: 'none'
+        status: 'waiting-ok'
       }
 
       const clearTagsList = genericFilter(rows, options)
-      console.log('clear tags ====>', await clearTagsList)
       if (clearTagsList.length > 0) {
         for (const tagLink of clearTagsList) {
           if (tagLink.url !== null) {
-            const URI = new URL(tagLink.url)
-            const segmentedUrl = URI.pathname.split('/')
-            const lastValue = URI.pathname.match(/\/$/) !== null ? segmentedUrl.length - 2 : segmentedUrl.length - 1
-            console.log(segmentedUrl[lastValue])
+            const checkValues = await fetchData(tagLink.url)
+            const currentTagValues = tagLink as linkValues
+            if (checkValues.httpStatus !== null && checkValues.httpStatus > 399) {
+              currentTagValues.status = 'manual'
+            } else {
+              currentTagValues.status = 'ok'
+            }
+            await updateRowData(sheetId, 'Output', tagLink.position, currentTagValues)
           }
         }
       }
