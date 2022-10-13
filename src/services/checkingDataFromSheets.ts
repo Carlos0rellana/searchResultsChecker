@@ -393,7 +393,6 @@ export const checkRedirectsFromSheets = async (sheetId: string): Promise<linkVal
 
 export const checkUrlInDBFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
-    const urlList: linkValues[] = []
     const rows = await accessToGoogleSheets(sheetId, 'Output')
     if (await rows !== undefined && await rows !== null) {
       const options: filterOptions = {
@@ -409,11 +408,12 @@ export const checkUrlInDBFromSheets = async (sheetId: string): Promise<linkValue
           nameItems: 'Url encontradas.'
         }
         await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
+        return rowsOfRedirect
       } else {
         console.log('No se encontrarons links en base de datos de metro')
       }
     }
-    return urlList
+    return null
   } catch (error) {
     console.error(error)
     return null
@@ -422,7 +422,6 @@ export const checkUrlInDBFromSheets = async (sheetId: string): Promise<linkValue
 
 export const checkUrlInGoogleFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
-    const urlList: linkValues[] = []
     const rows = await accessToGoogleSheets(sheetId, 'Output')
     if (await rows !== undefined && await rows !== null) {
       const options: filterOptions = {
@@ -438,11 +437,12 @@ export const checkUrlInGoogleFromSheets = async (sheetId: string): Promise<linkV
           nameItems: 'Url encontradas.'
         }
         await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
+        return rowsToSaveInSheet
       } else {
         console.log('No se encontrarons links en Google.')
       }
     }
-    return urlList
+    return null
   } catch (error) {
     console.error(error)
     return null
@@ -451,7 +451,6 @@ export const checkUrlInGoogleFromSheets = async (sheetId: string): Promise<linkV
 
 export const checkUrlInArcRedirectsFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
-    const urlList: linkValues[] = []
     const rows = await accessToGoogleSheets(sheetId, 'Output')
     if (await rows !== undefined && await rows !== null) {
       const options: filterOptions = {
@@ -467,11 +466,12 @@ export const checkUrlInArcRedirectsFromSheets = async (sheetId: string): Promise
           nameItems: 'Url encontradas.'
         }
         await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
+        return rowsToSaveInSheet
       } else {
         console.log('No se encontrarons redireccionamientos en Arc.')
       }
     }
-    return urlList
+    return null
   } catch (error) {
     console.error(error)
     return null
@@ -496,11 +496,12 @@ export const checkTagInArcFromSheets = async (sheetId: string): Promise<linkValu
           nameItems: 'Celdas modificadas.'
         }
         await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
+        return rowsToSaveInSheet
       } else {
         console.log('No se modificaron celdas.')
       }
     }
-    return urlList
+    return null
   } catch (error) {
     console.error(error)
     return null
@@ -520,6 +521,7 @@ export const checkByDatesFromSheets = async (sheetId: string): Promise<linkValue
           nameItems: 'Url guardadas.'
         }
         await updateAgroupOfValuesInSheet(sheetId, rowsOfRedirect, barText)
+        return rowsOfRedirect
       } else {
         console.log('No se encontrarons links con fechas')
       }
@@ -554,6 +556,7 @@ export const checkTagsFromSheets = async (sheetId: string): Promise<linkValues[]
               currentTagValues.status = 'ok'
             }
             await updateRowData(sheetId, 'Output', tagLink.position, currentTagValues)
+            urlList.push(currentTagValues)
           }
         }
       }
