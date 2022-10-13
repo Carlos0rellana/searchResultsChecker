@@ -480,7 +480,6 @@ export const checkUrlInArcRedirectsFromSheets = async (sheetId: string): Promise
 
 export const checkTagInArcFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
-    const urlList: linkValues[] = []
     const rows = await accessToGoogleSheets(sheetId, 'Output')
     if (await rows !== undefined && await rows !== null) {
       const options: filterOptions = {
