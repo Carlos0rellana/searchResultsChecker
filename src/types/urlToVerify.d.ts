@@ -1,9 +1,10 @@
 type typeOfLink = 'rare' | 'story' | 'author' | 'tag' | 'section' | 'video' | 'gallery' | 'file' | 'sitemap' | 'search' | 'any'
-type statusCheck = 'none' | 'ok' | 'manual' | 'failed' | 'process' | 'waiting-ok' | 'google' | 'date' | 'arcTime' | 'recent' | 'metro' | 'olderRedirect'
-type method = 'redirect' | 'overwrite' | 'resolver' | 'create' | 'clear' | null
+type statusCheck = 'none' | 'ok' | 'manual' | 'failed' | 'process' | 'waiting-ok' | 'google' | 'date' | 'arcTime' | 'recent' | 'metro' | 'olderRedirect' | 'circulate' | 'findUrlWithRedirectTo'
+type method = 'redirect' | 'overwrite' | 'resolver' | 'create' | 're-circulate' | 'clear' | null
 
 export interface filterOptions {
   httpStatus: number
+  method: method | null = null
   type: typeOfLink
   status: statusCheck
 }
@@ -32,4 +33,16 @@ export interface identityUrl {
 
 export interface modLinkValues extends linkValues {
   position: number
+}
+
+export interface arcSimpleStory {
+  url: string
+  site: string
+  id: string
+  type: typeOfLink
+  title: string
+}
+
+export interface arcReCirculate extends arcSimpleStory {
+  method: method
 }

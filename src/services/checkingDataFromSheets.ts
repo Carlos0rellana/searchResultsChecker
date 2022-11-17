@@ -1,8 +1,8 @@
 import { accessToGoogleSheets, updateAgroupOfValuesInSheet, updateRowData } from '../subscribers/googleSheets'
-import { filterOptions, linkValues, modLinkValues } from '../types/urlToVerify'
-import { checkredirect } from '../subscribers/getArticleRedirectFromPublimetroDB'
+import { arcSimpleStory, filterOptions, linkValues, modLinkValues } from '../types/urlToVerify'
+import { checkMetroDB } from '../subscribers/getArticleRedirectFromPublimetroDB'
 import { searchInGoogleServiceApi } from '../subscribers/googleApiSearch'
-import { fetchData, geIdentiflyUrl, getSimpleLinkValues, sanitizePathToWWWWpath } from '../utils/generic_utils'
+import { delay, fetchData, geIdentiflyUrl, getSimpleLinkValues, sanitizePathToWWWWpath } from '../utils/generic_utils'
 
 import cliProgress from 'cli-progress'
 import colors from 'ansi-colors'
@@ -13,12 +13,9 @@ import { checkRedirect } from '../subscribers/arcRedirects'
 import { searchInSitemapByDate } from '../subscribers/searchInSitemaps'
 import { msgProgressBar } from '../types/progressBarMsgs'
 import { getTagBySlug } from '../subscribers/arcTags'
+import { searchInBucleArc } from '../subscribers/arcSearch'
 
 const allSites: SitesList = sitesData as SitesList
-
-const delay = async (ms: number): Promise<any> => {
-  return await new Promise(resolve => setTimeout(resolve, ms))
-}
 
 const filterByDate = async (rows: string[][]): Promise<modLinkValues[]> => {
   let key: number = 0
@@ -34,7 +31,12 @@ const filterByDate = async (rows: string[][]): Promise<modLinkValues[]> => {
   progressRevisionOfSearch.start(rows.length, 0)
   for (const urlValidate of rows) {
     const rowData: modLinkValues = getSimpleLinkValues(urlValidate, key)
-    if (rowData.url !== null && rowData.status !== 'ok' && rowData.status === 'none' && rowData.httpStatus === 404) {
+    if (rowData.url !== null &&
+        rowData.status !== 'ok' &&
+        rowData.status === 'none' &&
+        rowData.httpStatus !== null &&
+        rowData.httpStatus >= 400 &&
+        rowData.httpStatus < 500) {
       const dateArticle = rowData.url?.match(datePattern)
       if (dateArticle !== null) {
         const date = datePattern.exec(rowData.url)
@@ -88,11 +90,13 @@ const genericFilter = (itemList: string[][]|null, options: filterOptions): modLi
     progressRevisionOfSearch.start(itemList.length, 0)
     for (const info of itemList) {
       const linkData: modLinkValues = getSimpleLinkValues(info, key)
-      const checkingType = options.type === 'any' ? (linkData.typeOfUrl === 'gallery' || linkData.typeOfUrl === 'story' || linkData.typeOfUrl === 'video') : linkData.typeOfUrl === options.type
+      const checkingType = options.type === 'any' ? (linkData.typeOfUrl === 'gallery' || linkData.typeOfUrl === 'story' || linkData.typeOfUrl === 'video' || linkData.typeOfUrl === 'search') : linkData.typeOfUrl === options.type
       if (linkData.httpStatus !== null &&
-          linkData.httpStatus < options.httpStatus + 100 &&
+          (options.method === null || linkData.solution?.includes(options.method) === true) &&
+          linkData.httpStatus < options.httpStatus + 99 &&
           linkData.httpStatus >= options.httpStatus &&
-          linkData.status === options.status && checkingType) {
+          linkData.status === options.status &&
+          checkingType) {
         result.push(linkData)
       }
       key++
@@ -118,12 +122,46 @@ const searchInMetroDatabase = async (itemList: modLinkValues[]): Promise<modLink
     for (const linkData of itemList) {
       if (linkData.url !== null) {
         const basicInfo = geIdentiflyUrl(linkData.url)
-        const returnRedirect: string | null = await checkredirect(basicInfo.siteId, basicInfo.storyTitle)
+        const returnRedirect: string | null = await checkMetroDB(basicInfo.siteId, basicInfo.storyTitle)
         if (await returnRedirect !== null && allSites[basicInfo.siteId]?.siteProperties?.feedDomainURL !== undefined) {
           const urlBase: string = returnRedirect?.match('/') !== null ? allSites[basicInfo.siteId].siteProperties.feedDomainURL as string : ''
           linkData.probableSolution = urlBase + (returnRedirect !== null ? returnRedirect : '')
           linkData.solution = ['redirect']
           linkData.status = 'metro'
+          findUrl.push(linkData)
+          progressRevisionOfSearch.update(key)
+          await delay(2000)
+        }
+      }
+      key++
+    }
+    progressRevisionOfSearch.stop()
+  }
+  return findUrl
+}
+
+const searchInArcCirculate = async (itemList: modLinkValues[]): Promise<modLinkValues[]> => {
+  console.log('\nStart to search in Arc Sites:')
+  const findUrl: modLinkValues[] = []
+  if (itemList.length > 0) {
+    let key: number = 0
+    const progressRevisionOfSearch = new cliProgress.SingleBar({
+      format: `Search in Arc Sites | ${colors.yellow('{bar}')} | {percentage}% || {value}/{total} URLs`,
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2591',
+      hideCursor: true
+    })
+    progressRevisionOfSearch.start(itemList.length, 0)
+    for (const linkData of itemList) {
+      if (linkData.url !== null) {
+        const basicInfo = geIdentiflyUrl(linkData.url)
+        const findURLinArc = await searchInBucleArc(basicInfo.siteId, basicInfo.storyTitle) as arcSimpleStory
+        if (await findURLinArc.id !== undefined && allSites[findURLinArc.site]?.siteProperties?.feedDomainURL !== undefined) {
+          const checkOrigin = basicInfo.siteId === findURLinArc.site
+          const rootUrl = ((allSites[findURLinArc.site].siteProperties.feedDomainURL as string).length > 0) ? allSites[findURLinArc.site].siteProperties.feedDomainURL as string : ''
+          linkData.probableSolution = checkOrigin ? findURLinArc.url : rootUrl + findURLinArc.url
+          linkData.solution = checkOrigin ? ['redirect'] : ['re-circulate']
+          linkData.status = findURLinArc.id.match('_redirect_') === null ? 'circulate' : 'findUrlWithRedirectTo'
           findUrl.push(linkData)
           progressRevisionOfSearch.update(key)
           await delay(2000)
@@ -193,7 +231,11 @@ const searchInRedirects = async (itemList: modLinkValues[]): Promise<modLinkValu
         const basicInfo = geIdentiflyUrl(sanitizePathToWWWWpath(linkData.url))
         const urlBase: string = allSites[basicInfo.siteId].siteProperties.feedDomainURL as string
         const pathUrl = new URL(linkData.url)
-        let arcRedirectSearch = await checkRedirect(basicInfo.siteId, pathUrl.pathname)
+        let urlContest = pathUrl.pathname
+        if (linkData.status === 'findUrlWithRedirectTo' && linkData.probableSolution !== null) {
+          urlContest = linkData.probableSolution
+        }
+        let arcRedirectSearch = await checkRedirect(basicInfo.siteId, urlContest)
         if (await arcRedirectSearch !== null) {
           linkData.probableSolution = arcRedirectSearch?.match('/') !== null ? urlBase + (arcRedirectSearch !== null ? arcRedirectSearch : '') : arcRedirectSearch
           linkData.solution = ['redirect']
@@ -201,9 +243,9 @@ const searchInRedirects = async (itemList: modLinkValues[]): Promise<modLinkValu
           findUrl.push(linkData)
         } else {
           if (pathUrl.pathname.match(/\/$/) !== null) {
-            arcRedirectSearch = await checkRedirect(basicInfo.siteId, pathUrl.pathname.replace(/.$/, ''))
+            arcRedirectSearch = await checkRedirect(basicInfo.siteId, urlContest.replace(/.$/, ''))
           } else {
-            arcRedirectSearch = await checkRedirect(basicInfo.siteId, `${pathUrl.pathname}/`)
+            arcRedirectSearch = await checkRedirect(basicInfo.siteId, `${urlContest}/`)
           }
           if (await arcRedirectSearch !== null) {
             const root: string = arcRedirectSearch?.match('/') !== null ? urlBase : ''
@@ -301,7 +343,7 @@ export const check404inGoogle = async (sheetId: string): Promise<linkValues[]|nu
             urlClear = geIdentiflyUrl(rowData.url)
           }
           if (urlClear !== null && urlClear.storyTitle !== 'null' && rowData.status === 'none' && urlClear.storyTitle.length > 0) {
-            const currentUrl: string | null = await checkredirect(urlClear.siteId, urlClear.storyTitle)
+            const currentUrl: string | null = await checkMetroDB(urlClear.siteId, urlClear.storyTitle)
             if (currentUrl !== null) {
               rowData.probableSolution = currentUrl
               rowData.status = 'metro'
@@ -355,7 +397,10 @@ export const checkRedirectsFromSheets = async (sheetId: string): Promise<linkVal
       let key: number = 0
       for (const urlValidate of rows) {
         const rowData: modLinkValues = getSimpleLinkValues(urlValidate, key)
-        if ((rowData.status === 'process' || rowData.status === 'waiting-ok') && rowData.httpStatus !== null && rowData.httpStatus > 400) {
+        if ((rowData.status === 'process' || rowData.status === 'waiting-ok') &&
+             rowData.httpStatus !== null &&
+             rowData.httpStatus >= 400 &&
+             rowData.httpStatus < 500) {
           rowsOfRedirect.push(rowData)
         }
         key++
@@ -397,6 +442,7 @@ export const checkUrlInDBFromSheets = async (sheetId: string): Promise<linkValue
     if (await rows !== undefined && await rows !== null) {
       const options: filterOptions = {
         httpStatus: 400,
+        method: null,
         type: 'any',
         status: 'none'
       }
@@ -426,6 +472,7 @@ export const checkUrlInGoogleFromSheets = async (sheetId: string): Promise<linkV
     if (await rows !== undefined && await rows !== null) {
       const options: filterOptions = {
         httpStatus: 400,
+        method: null,
         type: 'any',
         status: 'none'
       }
@@ -449,12 +496,43 @@ export const checkUrlInGoogleFromSheets = async (sheetId: string): Promise<linkV
   }
 }
 
+export const checkUrlInArcRedirectsFromSheetsWhenIsFoundInOtherUrl = async (sheetId: string): Promise<linkValues[]|null> => {
+  try {
+    const rows = await accessToGoogleSheets(sheetId, 'Output')
+    if (await rows !== undefined && await rows !== null) {
+      const options: filterOptions = {
+        httpStatus: 400,
+        method: 'redirect',
+        type: 'any',
+        status: 'findUrlWithRedirectTo'
+      }
+      const rowsOfRedirect = genericFilter(rows, options)
+      const rowsToSaveInSheet = await searchInRedirects(rowsOfRedirect)
+      if (await rowsToSaveInSheet.length > 0) {
+        const barText: msgProgressBar = {
+          description: 'Update status URL in GoogleSheets',
+          nameItems: 'Url encontradas.'
+        }
+        await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
+        return rowsToSaveInSheet
+      } else {
+        console.log('No se encontrarons redireccionamientos en Arc.')
+      }
+    }
+    return null
+  } catch (error) {
+    console.error(error)
+    return null
+  }
+}
+
 export const checkUrlInArcRedirectsFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
     const rows = await accessToGoogleSheets(sheetId, 'Output')
     if (await rows !== undefined && await rows !== null) {
       const options: filterOptions = {
         httpStatus: 400,
+        method: null,
         type: 'any',
         status: 'none'
       }
@@ -478,12 +556,43 @@ export const checkUrlInArcRedirectsFromSheets = async (sheetId: string): Promise
   }
 }
 
+export const checkUrlInArcCirculateFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
+  try {
+    const rows = await accessToGoogleSheets(sheetId, 'Output')
+    if (await rows !== undefined && await rows !== null) {
+      const options: filterOptions = {
+        httpStatus: 400,
+        method: null,
+        type: 'any',
+        status: 'none'
+      }
+      const rowsOfRedirect = genericFilter(rows, options)
+      const rowsToSaveInSheet = await searchInArcCirculate(rowsOfRedirect)
+      if (await rowsToSaveInSheet.length > 0) {
+        const barText: msgProgressBar = {
+          description: 'Update status URL in GoogleSheets',
+          nameItems: 'Url encontradas en sitios de Arc.'
+        }
+        await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
+        return rowsToSaveInSheet
+      } else {
+        console.log('No se encontrarons URL`s en Arc.')
+      }
+    }
+    return null
+  } catch (error) {
+    console.error(error)
+    return null
+  }
+}
+
 export const checkTagInArcFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
     const rows = await accessToGoogleSheets(sheetId, 'Output')
     if (await rows !== undefined && await rows !== null) {
       const options: filterOptions = {
         httpStatus: 400,
+        method: null,
         type: 'tag',
         status: 'none'
       }
@@ -539,6 +648,7 @@ export const checkTagsFromSheets = async (sheetId: string): Promise<linkValues[]
     if (rows !== null) {
       const options: filterOptions = {
         httpStatus: 400,
+        method: null,
         type: 'tag',
         status: 'waiting-ok'
       }
@@ -549,7 +659,9 @@ export const checkTagsFromSheets = async (sheetId: string): Promise<linkValues[]
           if (tagLink.url !== null) {
             const checkValues = await fetchData(tagLink.url)
             const currentTagValues = tagLink as linkValues
-            if (checkValues.httpStatus !== null && checkValues.httpStatus > 399) {
+            if (checkValues.httpStatus !== null &&
+                checkValues.httpStatus >= 400 &&
+                checkValues.httpStatus < 500) {
               currentTagValues.status = 'manual'
             } else {
               currentTagValues.status = 'ok'

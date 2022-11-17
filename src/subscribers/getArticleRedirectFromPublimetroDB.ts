@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-export const checkredirect = async (websiteId: string, toSearch: string): Promise< string | null> => {
+export const checkMetroDB = async (websiteId: string, toSearch: string): Promise< string | null> => {
   const config = {
     method: 'get',
     timeout: 10000,

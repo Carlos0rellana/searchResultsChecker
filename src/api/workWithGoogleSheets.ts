@@ -1,7 +1,7 @@
 import express from 'express'
 import asyncHandler from 'express-async-handler'
 import { checkUrlsStatusFromSheets } from '../services/getHttpAndTypesOfUrl'
-import { checkAuthorInOutput, check404inGoogle, checkRedirectsFromSheets, checkByDatesFromSheets, checkTagsFromSheets, checkUrlInDBFromSheets, checkUrlInGoogleFromSheets, checkUrlInArcRedirectsFromSheets, checkTagInArcFromSheets } from '../services/checkingDataFromSheets'
+import { checkAuthorInOutput, check404inGoogle, checkRedirectsFromSheets, checkByDatesFromSheets, checkTagsFromSheets, checkUrlInDBFromSheets, checkUrlInGoogleFromSheets, checkUrlInArcRedirectsFromSheets, checkTagInArcFromSheets, checkUrlInArcCirculateFromSheets, checkUrlInArcRedirectsFromSheetsWhenIsFoundInOtherUrl } from '../services/checkingDataFromSheets'
 import { deleteRedirectsFromSheets, proccessRedirectsFromSheets, proccessTagsFromSheets } from '../services/processDataFromSheets'
 
 export const showGoogleSheets = express.Router()
@@ -48,6 +48,11 @@ checkStories.get('/:documentID/search/tags', asyncHandler(async (req, res) => {
   res.send(values)
 }))
 
+checkStories.get('/:documentID/search/circulate', asyncHandler(async (req, res) => {
+  const values = await checkUrlInArcCirculateFromSheets(req.params.documentID)
+  res.send(values)
+}))
+
 checkStories.get('/:documentID/check/tags', asyncHandler(async (req, res) => {
   const values = await checkTagsFromSheets(req.params.documentID)
   res.send(values)
@@ -55,6 +60,11 @@ checkStories.get('/:documentID/check/tags', asyncHandler(async (req, res) => {
 
 checkStories.get('/:documentID/process/redirects', asyncHandler(async (req, res) => {
   const values = await proccessRedirectsFromSheets(req.params.documentID)
+  res.send(values)
+}))
+
+checkStories.get('/:documentID/process/redirects/circulate', asyncHandler(async (req, res) => {
+  const values = await checkUrlInArcRedirectsFromSheetsWhenIsFoundInOtherUrl(req.params.documentID)
   res.send(values)
 }))
 

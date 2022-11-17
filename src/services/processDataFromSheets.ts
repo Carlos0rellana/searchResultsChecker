@@ -15,8 +15,7 @@ export const proccessRedirectsFromSheets = async (sheetId: string): Promise<link
     const urlList: linkValues[] = []
     const rows = await accessToGoogleSheets(sheetId, 'Output')
     const rowsOfRedirect: modLinkValues[] = []
-    let firstRedirect: string|boolean = false
-    let lastRedirect: string|boolean = false
+    let lastRedirect: string|false = false
     const progressRevision = new cliProgress.SingleBar({
       format: `Redirect Progress | ${colors.green('{bar}')} | {percentage}% || {value}/{total} Redirects`,
       barCompleteChar: '\u2588',
@@ -31,7 +30,8 @@ export const proccessRedirectsFromSheets = async (sheetId: string): Promise<link
         if (rowData.status === 'process' &&
             rowData.solution?.includes('redirect') !== false &&
             rowData.httpStatus !== null &&
-            rowData.httpStatus > 400) {
+            rowData.httpStatus >= 400 &&
+            rowData.httpStatus < 499) {
           rowsOfRedirect.push(rowData)
         }
         key++
@@ -48,14 +48,17 @@ export const proccessRedirectsFromSheets = async (sheetId: string): Promise<link
           const externalLink = item as linkValues
           const redirectTo: string = item.probableSolution
           const originPath: string = URI.pathname
-          firstRedirect = await makeRedirect(earlyUrl.siteId, originPath, redirectTo)
-          if (originPath.match(/\/$/) != null) {
+          const firstRedirect = await makeRedirect(earlyUrl.siteId, originPath, redirectTo)
+          if (originPath.match(/\/$/) !== null) {
             lastRedirect = await makeRedirect(earlyUrl.siteId, originPath.replace(/\/$/, ''), redirectTo)
+            externalLink.status = 'waiting-ok'
           } else {
             lastRedirect = await makeRedirect(earlyUrl.siteId, `${originPath}/`, redirectTo)
+            externalLink.status = 'waiting-ok'
           }
           if (await firstRedirect !== false || await lastRedirect !== false) {
-            externalLink.status = 'waiting-ok'
+            urlList.push(externalLink)
+            console.log('testing')
             await updateRowData(sheetId, 'Output', item.position, externalLink)
           }
         }
@@ -91,7 +94,8 @@ export const proccessTagsFromSheets = async (sheetId: string): Promise<linkValue
             rowData.typeOfUrl === 'tag' &&
             rowData.solution?.includes('create') !== false &&
             rowData.httpStatus !== null &&
-            rowData.httpStatus > 400) {
+            rowData.httpStatus >= 400 &&
+            rowData.httpStatus < 499) {
           rowsOfRedirect.push(rowData)
         }
         key++
@@ -139,7 +143,11 @@ export const deleteRedirectsFromSheets = async (sheetId: string): Promise<linkVa
       let key: number = 0
       for (const urlValidate of rows) {
         const rowData: modLinkValues = getSimpleLinkValues(urlValidate, key)
-        if (rowData.status === 'none' && rowData.solution?.includes('clear') !== false && rowData.httpStatus === 404) {
+        if (rowData.status === 'none' &&
+            rowData.solution?.includes('clear') !== false &&
+            rowData.httpStatus !== null &&
+            rowData.httpStatus >= 400 &&
+            rowData.httpStatus < 499) {
           rowsOfRedirect.push(rowData)
         }
         key++

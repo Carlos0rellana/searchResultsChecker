@@ -2,6 +2,7 @@ import { linkValues, typeOfLink, modLinkValues, method, statusCheck } from '../t
 import axios, { AxiosError } from 'axios'
 import sitesData from '../config/static_data/blocks.json'
 import { identitySearch } from '../types/sites'
+import { ratioElementsOptions } from '../types/config'
 
 const getGlobalContetType = (check: string): typeOfLink | null => {
   const find = 'Fusion.globalContent='
@@ -38,7 +39,7 @@ const rudimentaryUrlDistribution = (url: string): typeOfLink => {
     return 'search'
   } else if ((url.match(/galerias?/) != null) || (url.match(/fotos?/) != null)) {
     return 'gallery'
-  } else if (url.match(/\/autor(es)?/) != null) {
+  } else if (url.match(/\/autor(es)?/) != null || url.match(/\/author\//) != null) {
     return 'author'
   } else if (url.includes('.png') || url.includes('.xml') || url.includes('.jpeg') || url.includes('.jpg')) {
     return 'file'
@@ -82,6 +83,24 @@ const getOutputTypeFromUrl = (url: string): string => {
   return outputType
 }
 
+export const ratioWords = (variableUrl: string, item: ratioElementsOptions): number => {
+  const splitConfig = item.type === 'url' ? '-' : ' '
+  let countWords = 0
+  const searchWordsInUrl = item.valueToSearch.split(splitConfig)
+  const urlWordsToCompare = variableUrl.split(splitConfig)
+  for (const element of searchWordsInUrl) {
+    if (urlWordsToCompare.includes(element)) {
+      countWords++
+    }
+  }
+
+  return (countWords / searchWordsInUrl.length)
+}
+
+export const delay = async (ms: number): Promise<any> => {
+  return await new Promise(resolve => setTimeout(resolve, ms))
+}
+
 export const sanitizePathToWWWWpath = (url: string, protocol: string|null = null): string => {
   const formatToUrl = new URL(url)
   let hostRoute = formatToUrl.hostname.replace('origin.', 'www.').replace('touch.', 'www.').replace('dev.', 'www.').replace('showbiz.', 'www.').replace('juegos.', 'www.').replace('mov.', 'www.')
@@ -105,7 +124,6 @@ export const geIdentiflyUrl = (url: string): identitySearch => {
   const video = /\/video\/$/
   const attachment = /\/attachment\/(.*)?\/?$/
   Object.entries(sitesData).forEach((element) => {
-    // console.log(URI)
     const currenturl = element[1].siteProperties.feedDomainURL
     if (`${URI.protocol}//${URI.hostname}` === currenturl) {
       site.siteId = element[0]

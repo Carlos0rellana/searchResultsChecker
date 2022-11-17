@@ -6,6 +6,7 @@ import { msgProgressBar } from '../types/progressBarMsgs'
 
 import cliProgress from 'cli-progress'
 import colors from 'ansi-colors'
+import { delay } from '../utils/generic_utils'
 
 const googleInfo = {
   keyFile: './src/config/googleAccess.json',
@@ -127,6 +128,7 @@ export const updateAgroupOfValuesInSheet = async (sheetId: string, urlListToMod:
       if (item.url !== null) {
         const externalLink: linkValues = item as linkValues
         await updateRowData(sheetId, 'Output', item.position, externalLink)
+        await delay(1000)
       }
       progressRevision.update(progressCount)
       progressCount++
