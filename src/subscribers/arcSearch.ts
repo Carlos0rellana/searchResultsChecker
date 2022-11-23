@@ -10,33 +10,65 @@ const searchInArc = async (siteId: string, searchQuery: string, from: string = '
   const returnValues = '_id,website_url,websites,canonical_url,headlines.basic,type'
   const config = {
     method: 'get',
-    timeout: 10000,
+    // timeout: 10000,
     url: `https://api.metroworldnews.arcpublishing.com/content/v4/search/published?website=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}&from=${from}&size=${size}`,
     headers: {
       'Content-Type': 'application/json',
       Authorization: access.token
     }
   }
+  let query = null;
+  while(query == null){
+    query = await getData(config);
+  }
 
-  return await axios(config)
-    .then(function (response) {
-      const result = response.data
-      if (result.content_elements !== undefined) {
-        console.log('\n========\n', result, '\n========\n')
-        return result
-      } else if (result.error_code !== undefined) {
-        return 'fail'
-      } else {
-        return 'fail'
-      }
-    })
-    .catch(function (_error) {
-      return 'fail'
-    })
+  let result = query.data;
+  if (result.content_elements !== undefined) {
+    console.log('\n========\n', result, '\n========\n')
+    return result
+  } else if (result.error_code !== undefined) {
+    return 'fail'
+  } else {
+    return 'fail'
+  }
+
+  // return await axios(config)
+  //   .then(function (response) {
+  //     console.log(response)
+  //     const result = response.data
+      // if (result.content_elements !== undefined) {
+      //   console.log('\n========\n', result, '\n========\n')
+      //   return result
+      // } else if (result.error_code !== undefined) {
+      //   return 'fail'
+      // } else {
+      //   return 'fail'
+      // }
+  //   })
+  //   .catch(function (_error) {
+  //     console.log(`\nERROR!!!\n`)
+  //     console.log(_error)
+  //     return 'fail'
+  //   })
+}
+
+const getData = async (config : any) => {
+  try{
+    let result = await axios(config);
+    // console.log(result);
+    return result;
+  }catch(err : any){
+    if(err.response.status != 408){
+      console.log(err.response.status);
+      console.log('ERROR en GET DATA')
+      process.exit();
+    }
+    return null;
+  }
 }
 
 const reverseSearch = async (siteId: string, search: string, compareOrder: string[]): Promise <any|null> => {
-  const searchQuery = `canonical_url:"*${search}*"`
+  const searchQuery = `canonical_url:*${search}*`
   if (siteId === compareOrder[0]) {
     const find = searchInArc(siteId, searchQuery)
     if (await find === 'fail') {
@@ -105,17 +137,16 @@ const lookingForASite = async (searchConfig: searchInArcItemOptions): Promise <a
   let mainSiteSearch: any = await searchInArc(searchConfig.siteId, searchConfig.search)
   let currentUrl: arcSimpleStory
   console.log('\n<////////////>\ninit search in Arc\n<////////////>\n')
-  console.log('SEARCH======>', searchConfig.search)
-  if (await mainSiteSearch === undefined || await mainSiteSearch.message === 'fail') {
+  if (mainSiteSearch === undefined || mainSiteSearch.message === 'fail') {
     mainSiteSearch = await lookingForASite(searchConfig)
   }
-  if (await mainSiteSearch.count !== undefined && await mainSiteSearch.count > 0) {
+  if (mainSiteSearch.count !== undefined && mainSiteSearch.count > 0) {
     const config: ratioElementsOptions = {
       type: searchConfig.type,
       siteId: searchConfig.siteId,
       valueToSearch: searchConfig.search
     }
-    const checkingItem = comparativeResult(await mainSiteSearch, config)
+    const checkingItem = comparativeResult(mainSiteSearch, config)
     if (checkingItem !== false) {
       currentUrl = checkingItem[1]
       console.log(currentUrl)
@@ -149,7 +180,7 @@ const bucleSeachInSitesList = async (siteId: string, search: string, currentPrio
   let find: arcSimpleStory | false = false
   for (const localIdSite of idListSites) {
     if (localIdSite !== 'mwnbrasil' && localIdSite !== 'novamulher' && localIdSite !== siteId) {
-      const searchQuery = `canonical_url:"*${search}*"`
+      const searchQuery = `canonical_url:*${search}*`
       const searchConfig: searchInArcItemOptions = {
         siteId: localIdSite,
         search: searchQuery,
@@ -172,7 +203,7 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
     const compareList = siteId === 'mwnbrasil' ? ['mwnbrasil', 'novamulher'] : ['novamulher', 'mwnbrasil']
     find = await reverseSearch(siteId, search, compareList)
   } else {
-    const searchQuery = `canonical_url:"*${search}*"`
+    const searchQuery = `canonical_url:*${search}*`
     const searchConfig: searchInArcItemOptions = {
       siteId: siteId,
       search: searchQuery,

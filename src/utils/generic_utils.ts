@@ -86,10 +86,13 @@ const getOutputTypeFromUrl = (url: string): string => {
 export const ratioWords = (variableUrl: string, item: ratioElementsOptions): number => {
   const splitConfig = item.type === 'url' ? '-' : ' '
   let countWords = 0
+  let sitios : any = sitesData;
+  let urlCompleta = sitios[item.siteId].siteProperties.feedDomainURL + '' + variableUrl;
+  let urlArc = geIdentiflyUrl(urlCompleta);
   const searchWordsInUrl = item.valueToSearch.split(splitConfig)
-  const urlWordsToCompare = variableUrl.split(splitConfig)
+  const urlWordsToCompare = urlArc.storyTitle.split(splitConfig)
   for (const element of searchWordsInUrl) {
-    if (urlWordsToCompare.includes(element)) {
+    if (urlWordsToCompare.includes(element.replace(/\*/gi,'').replace('canonical_url:',''))) {
       countWords++
     }
   }
