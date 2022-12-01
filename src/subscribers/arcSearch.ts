@@ -10,16 +10,21 @@ const searchInArc = async (siteId: string, searchQuery: string, from: string = '
   const returnValues = '_id,website_url,websites,canonical_url,headlines.basic,type'
   const config = {
     method: 'get',
-    // timeout: 10000,
     url: `https://api.metroworldnews.arcpublishing.com/content/v4/search/published?website=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}&from=${from}&size=${size}`,
     headers: {
       'Content-Type': 'application/json',
       Authorization: access.token
     }
   }
+
   let query = null;
+  let iteraciones = 0;
   while(query == null){
+    if(iteraciones > 10){
+      return 'fail';
+    }
     query = await getData(config);
+    iteraciones++;
   }
 
   let result = query.data;
@@ -31,38 +36,14 @@ const searchInArc = async (siteId: string, searchQuery: string, from: string = '
   } else {
     return 'fail'
   }
-
-  // return await axios(config)
-  //   .then(function (response) {
-  //     console.log(response)
-  //     const result = response.data
-      // if (result.content_elements !== undefined) {
-      //   console.log('\n========\n', result, '\n========\n')
-      //   return result
-      // } else if (result.error_code !== undefined) {
-      //   return 'fail'
-      // } else {
-      //   return 'fail'
-      // }
-  //   })
-  //   .catch(function (_error) {
-  //     console.log(`\nERROR!!!\n`)
-  //     console.log(_error)
-  //     return 'fail'
-  //   })
 }
 
 const getData = async (config : any) => {
   try{
     let result = await axios(config);
-    // console.log(result);
     return result;
   }catch(err : any){
-    if(err.response.status != 408){
-      console.log(err.response.status);
-      console.log('ERROR en GET DATA')
-      process.exit();
-    }
+    console.log(err)
     return null;
   }
 }
@@ -179,6 +160,7 @@ const bucleSeachInSitesList = async (siteId: string, search: string, currentPrio
   const idListSites = Object.keys(allSites)
   let find: arcSimpleStory | false = false
   for (const localIdSite of idListSites) {
+    console.log(`Buscando en el Sitio: ${localIdSite}`);
     if (localIdSite !== 'mwnbrasil' && localIdSite !== 'novamulher' && localIdSite !== siteId) {
       const searchQuery = `canonical_url:*${search}*`
       const searchConfig: searchInArcItemOptions = {
@@ -215,6 +197,21 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
       find = await bucleSeachInSitesList(siteId, search, currentPriority)
     }
   }
+  // console.log(`\n\n Resultado de SearchBubleArc`);
+  // console.log(find);
+
+  // if(find !== false && find?.type === 'redirect'){
+  //   console.log('Es un Redirect');
+  //   const returnValues = '_id,website_url,websites,canonical_url,headlines.basic,type'
+  //   const config = {
+  //     method: 'get',
+  //     url: `https://api.metroworldnews.arcpublishing.com/content/v4/search/published?website=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}&from=${from}&size=${size}`,
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Authorization: access.token
+  //     }
+  //   }
+  // }
   if (find !== false && currentPriority === false && (await find?.type === 'gallery' || await find?.type === 'video')) {
     const checkByTitle = await searchByTitle(siteId, find)
     if (await checkByTitle !== false) {
