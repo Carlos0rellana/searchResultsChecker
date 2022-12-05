@@ -17,19 +17,19 @@ const searchInArc = async (siteId: string, searchQuery: string, from: string = '
     }
   }
 
-  console.log(`\nhttps://api.metroworldnews.arcpublishing.com/content/v4/search/published?website=${siteId}&q=${searchQuery}\n&_sourceInclude=${returnValues}&from=${from}&size=${size}`);
+  console.log(`\nhttps://api.metroworldnews.arcpublishing.com/content/v4/search/published?website=${siteId}&q=${searchQuery}\n&_sourceInclude=${returnValues}&from=${from}&size=${size}`)
 
-  let query = null;
-  let iteraciones = 0;
-  while(query == null){
-    if(iteraciones > 10){
-      return 'fail';
+  let query = null
+  let iteraciones = 0
+  while (query == null) {
+    if (iteraciones > 10) {
+      return 'fail'
     }
-    query = await getData(config);
-    iteraciones++;
+    query = await getData(config)
+    iteraciones++
   }
 
-  let result = query.data;
+  const result = query.data
   if (result.content_elements !== undefined) {
     console.log('\n========\n', result, '\n========\n')
     return result
@@ -40,13 +40,13 @@ const searchInArc = async (siteId: string, searchQuery: string, from: string = '
   }
 }
 
-const getData = async (config : any) => {
-  try{
-    let result = await axios(config);
-    return result;
-  }catch(err : any){
+const getData = async (config: any): Promise<any|null> => {
+  try {
+    const result = await axios(config)
+    return result
+  } catch (err: any) {
     console.log(err)
-    return null;
+    return null
   }
 }
 
@@ -65,11 +65,10 @@ const reverseSearch = async (siteId: string, search: string, compareOrder: strin
 const searchByTitle = async (siteId: string, element: arcSimpleStory): Promise<arcSimpleStory|false> => {
   console.log('function searchByTitle')
   const searchQuery = `headlines.basic:"${element.title.replace(/:/g, '\\:').replace(/"/g, '\\"')}"+AND+type:"story"`
-  let data : any = await searchInArc(siteId,searchQuery)
-  if(data !== 'fail'){
-    let result : any = restructureAarcSimpleStory(siteId,data.content_elements[0]);
-    return result;
-
+  const data: any = await searchInArc(siteId, searchQuery)
+  if (data !== 'fail') {
+    const result: any = restructureAarcSimpleStory(siteId, data.content_elements[0])
+    return result
   }
   return false
 }
@@ -99,7 +98,7 @@ const comparativeResult = (resultList: any, config: ratioElementsOptions, ratio:
       if (element.canonical_url !== undefined) {
         console.log('Linea 105')
         const ratioValue = ratioWords(element.canonical_url, config)
-        console.log('ratioValue',ratioValue);
+        console.log('ratioValue', ratioValue)
         if (returnValue === false && ratioValue >= ratio) {
           console.log('Linea 109')
           const currentUrl = restructureAarcSimpleStory(config.siteId, element)
@@ -133,9 +132,9 @@ const lookingForASite = async (searchConfig: searchInArcItemOptions): Promise <a
       siteId: searchConfig.siteId,
       valueToSearch: searchConfig.search
     }
-    console.log('ratioElementsOptions',config)
+    console.log('ratioElementsOptions', config)
     const checkingItem = comparativeResult(mainSiteSearch, config)
-    console.log('checkingItem',checkingItem)
+    console.log('checkingItem', checkingItem)
     if ((checkingItem !== false && checkingItem.length > 0) || (checkingItem !== false && searchConfig.search.match('headlines.basic') !== null)) {
       console.log('Line 138')
       currentUrl = checkingItem[1]
@@ -170,7 +169,7 @@ const bucleSeachInSitesList = async (siteId: string, search: string, currentPrio
   const idListSites = Object.keys(allSites)
   let find: arcSimpleStory | false = false
   for (const localIdSite of idListSites) {
-    console.log(`Buscando en el Sitio: ${localIdSite}`);
+    console.log(`Buscando en el Sitio: ${localIdSite}`)
     if (localIdSite !== 'mwnbrasil' && localIdSite !== 'novamulher' && localIdSite !== siteId) {
       const searchQuery = `canonical_url:*${search}*`
       const searchConfig: searchInArcItemOptions = {
@@ -203,7 +202,7 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
       priority: currentPriority
     }
     find = await lookingForASite(searchConfig)
-    console.log('Linea 211',find);
+    console.log('Linea 211', find)
     if (await find === false) {
       find = await bucleSeachInSitesList(siteId, search, currentPriority)
     }
@@ -224,7 +223,7 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
   //   }
   // }
   if (find !== false && currentPriority === false && (await find?.type === 'gallery' || await find?.type === 'video')) {
-    console.log('Gallery Found');
+    console.log('Gallery Found')
     const checkByTitle = await searchByTitle(siteId, find)
     if (checkByTitle !== false) {
       return checkByTitle

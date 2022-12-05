@@ -46,3 +46,8 @@ export interface arcSimpleStory {
 export interface arcReCirculate extends arcSimpleStory {
   method: method
 }
+
+export interface ortographyChecker {
+  origin: string
+  mod: string
+}

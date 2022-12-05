@@ -1,6 +1,6 @@
 import express from 'express'
 import siteLists from './api/siteProperties'
-import { showGoogleSheets, checkAuthors, checkStories } from './api/workWithGoogleSheets'
+import { showGoogleSheets, checkAuthors, checkStories, testing } from './api/workWithGoogleSheets'
 
 const app = express()
 app.use(express.json())
@@ -11,4 +11,5 @@ app.listen(PORT, () => {
 })
 
 app.use('/api/sites', siteLists)
+app.use('/test/', testing)
 app.use('/api/sheets/', checkAuthors, showGoogleSheets, checkStories)

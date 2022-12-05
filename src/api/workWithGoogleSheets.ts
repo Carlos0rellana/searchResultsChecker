@@ -3,10 +3,12 @@ import asyncHandler from 'express-async-handler'
 import { checkUrlsStatusFromSheets } from '../services/getHttpAndTypesOfUrl'
 import { checkAuthorInOutput, check404inGoogle, checkRedirectsFromSheets, checkByDatesFromSheets, checkTagsFromSheets, checkUrlInDBFromSheets, checkUrlInGoogleFromSheets, checkUrlInArcRedirectsFromSheets, checkTagInArcFromSheets, checkUrlInArcCirculateFromSheets, checkUrlInArcRedirectsFromSheetsWhenIsFoundInOtherUrl } from '../services/checkingDataFromSheets'
 import { deleteRedirectsFromSheets, proccessRedirectsFromSheets, proccessTagsFromSheets } from '../services/processDataFromSheets'
+import { getAsyncWebGrammarly } from '../subscribers/grammarly'
 
 export const showGoogleSheets = express.Router()
 export const checkAuthors = express.Router()
 export const checkStories = express.Router()
+export const testing = express.Router()
 
 checkAuthors.get('/:documentID/check/authors', asyncHandler(async (req, res) => {
   const values = await checkAuthorInOutput(req.params.documentID, true)
@@ -82,3 +84,8 @@ showGoogleSheets.get('/:documentID', asyncHandler(async (req, res) => {
   const values = await checkUrlsStatusFromSheets(req.params.documentID)
   res.send(values)
 }))
+
+testing.get('/checkspells/:phrase', (req, res) => {
+  const values = getAsyncWebGrammarly(decodeURI(req.params.phrase))
+  res.send(values)
+})
