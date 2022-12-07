@@ -5,6 +5,7 @@ import sitesData from '../config/static_data/blocks.json'
 import { arcSimpleStory, typeOfLink } from '../types/urlToVerify'
 import { ratioElementsOptions, searchInArcItemOptions } from '../types/config'
 import { ratioWords } from '../utils/generic_utils'
+import { getAsyncWebGrammarly, getAsyncWebGrammarly_ } from '../subscribers/grammarly'
 
 const searchInArc = async (siteId: string, searchQuery: string, from: string = '0', size: string = '100'): Promise<string> => {
   const returnValues = '_id,website_url,websites,canonical_url,headlines.basic,type'
@@ -17,7 +18,7 @@ const searchInArc = async (siteId: string, searchQuery: string, from: string = '
     }
   }
 
-  console.log(`\nhttps://api.metroworldnews.arcpublishing.com/content/v4/search/published?website=${siteId}&q=${searchQuery}\n&_sourceInclude=${returnValues}&from=${from}&size=${size}`)
+  console.log(`https://api.metroworldnews.arcpublishing.com/content/v4/search/published?\nwebsite=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}&from=${from}&size=${size}`)
 
   let query = null
   let iteraciones = 0
@@ -30,7 +31,7 @@ const searchInArc = async (siteId: string, searchQuery: string, from: string = '
   }
 
   const result = query.data
-  if (result.content_elements !== undefined) {
+  if (result.content_elements !== undefined && result.content_elements.length > 0) {
     console.log('\n========\n', result, '\n========\n')
     return result
   } else if (result.error_code !== undefined) {
@@ -63,8 +64,8 @@ const reverseSearch = async (siteId: string, search: string, compareOrder: strin
 }
 
 const searchByTitle = async (siteId: string, element: arcSimpleStory): Promise<arcSimpleStory|false> => {
-  console.log('function searchByTitle')
-  const searchQuery = `headlines.basic:"${element.title.replace(/:/g, '\\:').replace(/"/g, '\\"')}"+AND+type:"story"`
+  const title = getAsyncWebGrammarly(element.title.replace(/:/g, '\\:').replace(/"/g, '\\"'))
+  const searchQuery = `headlines.basic:"${title.mod}"+AND+type:"story"`
   const data: any = await searchInArc(siteId, searchQuery)
   if (data !== 'fail') {
     const result: any = restructureAarcSimpleStory(siteId, data.content_elements[0])
@@ -90,23 +91,17 @@ const restructureAarcSimpleStory = (siteId: string, searchResult: any): arcSimpl
 }
 
 const comparativeResult = (resultList: any, config: ratioElementsOptions, ratio: number = 0.8): [number, arcSimpleStory]|false => {
-  console.log('function comparativeResult')
   let returnValue: [number, arcSimpleStory]|false = false
   if (resultList.content_elements !== undefined) {
-    console.log('Linea 102')
     for (const element of resultList.content_elements) {
       if (element.canonical_url !== undefined) {
-        console.log('Linea 105')
         const ratioValue = ratioWords(element.canonical_url, config)
         console.log('ratioValue', ratioValue)
         if (returnValue === false && ratioValue >= ratio) {
-          console.log('Linea 109')
           const currentUrl = restructureAarcSimpleStory(config.siteId, element)
           returnValue = [ratioValue, currentUrl]
         }
-
         if (returnValue !== false && ratioValue > returnValue[0]) {
-          console.log('Linea 115')
           const currentUrl = restructureAarcSimpleStory(config.siteId, element)
           returnValue = [ratioValue, currentUrl]
         }
@@ -117,33 +112,25 @@ const comparativeResult = (resultList: any, config: ratioElementsOptions, ratio:
 }
 
 const lookingForASite = async (searchConfig: searchInArcItemOptions): Promise <arcSimpleStory|false> => {
-  console.log('function lookingForASite')
   let mainSiteSearch: any = await searchInArc(searchConfig.siteId, searchConfig.search)
   let currentUrl: arcSimpleStory
   console.log('\n<////////////>\ninit search in Arc\n<////////////>\n')
   if (mainSiteSearch === undefined || mainSiteSearch.message === 'fail') {
-    console.log('Line 126')
     mainSiteSearch = await lookingForASite(searchConfig)
   }
   if (mainSiteSearch.count !== undefined && mainSiteSearch.count > 0) {
-    console.log('Line 130')
     const config: ratioElementsOptions = {
       type: searchConfig.type,
       siteId: searchConfig.siteId,
       valueToSearch: searchConfig.search
     }
-    console.log('ratioElementsOptions', config)
     const checkingItem = comparativeResult(mainSiteSearch, config)
-    console.log('checkingItem', checkingItem)
     if ((checkingItem !== false && checkingItem.length > 0) || (checkingItem !== false && searchConfig.search.match('headlines.basic') !== null)) {
-      console.log('Line 138')
       currentUrl = checkingItem[1]
-      console.log(currentUrl)
       console.log('\n<////////////>\nend search in Arc\n<////////////>\n')
       return currentUrl
     }
   }
-  console.log('Line 145')
   console.log(false)
   console.log('\n<////////////>\nend search in Arc\n<////////////>\n')
   return false
@@ -202,34 +189,35 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
       priority: currentPriority
     }
     find = await lookingForASite(searchConfig)
-    console.log('Linea 211', find)
-    if (await find === false) {
+    if (find === false) {
       find = await bucleSeachInSitesList(siteId, search, currentPriority)
     }
   }
-  // console.log(`\n\n Resultado de SearchBubleArc`);
-  // console.log(find);
-
-  // if(find !== false && find?.type === 'redirect'){
-  //   console.log('Es un Redirect');
-  //   const returnValues = '_id,website_url,websites,canonical_url,headlines.basic,type'
-  //   const config = {
-  //     method: 'get',
-  //     url: `https://api.metroworldnews.arcpublishing.com/content/v4/search/published?website=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}&from=${from}&size=${size}`,
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       Authorization: access.token
-  //     }
-  //   }
-  // }
-  if (find !== false && currentPriority === false && (await find?.type === 'gallery' || await find?.type === 'video')) {
-    console.log('Gallery Found')
+  if (find !== false && currentPriority === false && (find?.type === 'gallery' || find?.type === 'video')) {
     const checkByTitle = await searchByTitle(siteId, find)
     if (checkByTitle !== false) {
       return checkByTitle
     } else {
       const returnValue = await bucleSeachByTitleInSitesList(siteId, find)
       return returnValue
+    }
+  }
+  if (find === false) {
+    const title = search.replace(/-/g, ' ')
+    const generaTitulos = getAsyncWebGrammarly_(title)
+    for (const titulo of generaTitulos.result) {
+      const input = {
+        headlines: { basic: titulo },
+        canonical_url: 'TESTNAHA',
+        site: siteId,
+        _id: 'TESTNAHA',
+        type: 'story'
+      }
+      const element = await restructureAarcSimpleStory(siteId, input)
+      find = await searchByTitle(siteId, element)
+      if (find !== false) {
+        return find
+      }
     }
   }
   return find

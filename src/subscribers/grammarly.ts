@@ -1,5 +1,5 @@
 import Typo from 'typo-js'
-import { ortographyChecker } from '../types/urlToVerify'
+import { ortographyChecker, ortographyChecker_ } from '../types/urlToVerify'
 
 const dictionary = new Typo('es_ES', null, null, { dictionaryPath: 'typo/dictionaries' })
 
@@ -24,6 +24,20 @@ const bucleConfirm = (word: string): string => {
   return word
 }
 
+const bucleConfirm_ = (word: string): any[] => {
+  const result: any[] = []
+  result.push(word)
+  for (let letter = 0; letter < word.length; letter++) {
+    if (word[letter].match(/^[aeiouúAEIOUÚ]/) !== null) {
+      const currentWord = word.substring(0, letter) + checkVocals(word[letter]) + word.substring(letter + 1)
+      if (dictionary.check(currentWord)) {
+        result.push(currentWord)
+      }
+    }
+  }
+  return result
+}
+
 const validateWordGenerator = (word: string): string => {
   const currentWord = bucleConfirm(word)
   if (currentWord === word && word.match(/gu[ei]/) !== null) {
@@ -37,6 +51,11 @@ const validateWordGenerator = (word: string): string => {
       }
     }
   }
+  return currentWord
+}
+
+const validateWordGenerator_ = (word: string): any[] => {
+  const currentWord = bucleConfirm_(word)
   return currentWord
 }
 
@@ -56,4 +75,51 @@ export const getAsyncWebGrammarly = (phrase: string): ortographyChecker => {
     step++
   }
   return { origin: phrase, mod: outputPhrase }
+}
+
+export const getAsyncWebGrammarly_ = (phrase: string): ortographyChecker_ => {
+  const phraseWordList = phrase.split(' ')
+  let result: any = []
+  for (const word of phraseWordList) {
+    const words = validateWordGenerator_(word)
+    result = generaRespuesta(result, words)
+  }
+  const respuesta: any[] = []
+  for (let x = 0; x < result.length; x++) {
+    const resultado: any[] = result[x]
+    let frase: string = ''
+    for (let y = 0; y < resultado.length; y++) {
+      const palabra: string = resultado[y]
+      if (y === 0) {
+        console.log('Primera Palabra', palabra)
+        frase = palabra
+      } else {
+        console.log('Otras Palabras', palabra)
+        frase = frase + ' ' + palabra
+      }
+    }
+    respuesta.push(frase)
+  }
+  return { origin: phrase, result: respuesta }
+}
+
+const generaRespuesta = (respuesta: any[], words: any[]): any[] => {
+  console.log('function generaRespuesta', respuesta, words)
+  const result: any[] = []
+  if (respuesta.length > 0) {
+    for (let x = 0; x < respuesta.length; x++) {
+      let output: any[]
+      const registro: any[] = respuesta[x]
+      for (let y = 0; y < words.length; y++) {
+        const word: String = words[y]
+        output = registro.concat([word])
+        result.push(output)
+      }
+    }
+  } else {
+    for (const word of words) {
+      result.push([word])
+    }
+  }
+  return result
 }

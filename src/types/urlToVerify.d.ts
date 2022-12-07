@@ -1,5 +1,5 @@
 type typeOfLink = 'redirect' | 'rare' | 'story' | 'author' | 'tag' | 'section' | 'video' | 'gallery' | 'file' | 'sitemap' | 'search' | 'any'
-type statusCheck = 'none' | 'ok' | 'manual' | 'failed' | 'process' | 'waiting-ok' | 'google' | 'date' | 'arcTime' | 'recent' | 'metro' | 'olderRedirect' | 'circulate' | 'findUrlWithRedirectTo'
+type statusCheck = 'none' | 'ok' | 'manual' | 'failed' | 'process' | 'waiting-ok' | 'google' | 'date' | 'arcTime' | 'recent' | 'metro' | 'olderRedirect' | 'circulate' | 'findUrlWithRedirectTo' | 'searchByTitle'
 type method = 'redirect' | 'overwrite' | 'resolver' | 'create' | 're-circulate' | 'clear' | null
 
 export interface filterOptions {
@@ -50,4 +50,9 @@ export interface arcReCirculate extends arcSimpleStory {
 export interface ortographyChecker {
   origin: string
   mod: string
+}
+
+export interface ortographyChecker_ {
+  origin: string
+  result: any[]
 }
