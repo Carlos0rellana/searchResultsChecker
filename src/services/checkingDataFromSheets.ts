@@ -161,7 +161,11 @@ const searchInArcCirculate = async (itemList: modLinkValues[]): Promise<modLinkV
           const rootUrl = ((allSites[findURLinArc.site].siteProperties.feedDomainURL as string).length > 0) ? allSites[findURLinArc.site].siteProperties.feedDomainURL as string : ''
           linkData.probableSolution = checkOrigin ? findURLinArc.url : rootUrl + findURLinArc.url
           linkData.solution = checkOrigin ? ['redirect'] : ['re-circulate']
-          linkData.status = findURLinArc.id.match('_redirect_') === null ? 'circulate' : 'findUrlWithRedirectTo'
+          if (findURLinArc.isTitleByIteration) {
+            linkData.status = 'searchByTitle'
+          } else {
+            linkData.status = findURLinArc.id.match('_redirect_') === null ? 'circulate' : 'findUrlWithRedirectTo'
+          }
           findUrl.push(linkData)
           progressRevisionOfSearch.update(key)
           await delay(2000)

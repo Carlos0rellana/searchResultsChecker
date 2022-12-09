@@ -85,7 +85,8 @@ const restructureAarcSimpleStory = (siteId: string, searchResult: any): arcSimpl
     site: siteId,
     id: searchResult._id,
     type: searchResult.type as typeOfLink,
-    title: titleFromInput
+    title: titleFromInput,
+    isTitleByIteration: false
   }
   return currentUrl
 }
@@ -216,6 +217,7 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
       const element = await restructureAarcSimpleStory(siteId, input)
       find = await searchByTitle(siteId, element)
       if (find !== false) {
+        find.isTitleByIteration = true
         return find
       }
     }

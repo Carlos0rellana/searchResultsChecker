@@ -41,6 +41,7 @@ export interface arcSimpleStory {
   id: string
   type: typeOfLink
   title: string
+  isTitleByIteration: boolean = false
 }
 
 export interface arcReCirculate extends arcSimpleStory {
