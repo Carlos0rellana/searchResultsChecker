@@ -91,10 +91,8 @@ export const getAsyncWebGrammarly_ = (phrase: string): ortographyChecker_ => {
     for (let y = 0; y < resultado.length; y++) {
       const palabra: string = resultado[y]
       if (y === 0) {
-        console.log('Primera Palabra', palabra)
         frase = palabra
       } else {
-        console.log('Otras Palabras', palabra)
         frase = frase + ' ' + palabra
       }
     }
@@ -104,7 +102,7 @@ export const getAsyncWebGrammarly_ = (phrase: string): ortographyChecker_ => {
 }
 
 const generaRespuesta = (respuesta: any[], words: any[]): any[] => {
-  console.log('function generaRespuesta', respuesta, words)
+  // console.log('function generaRespuesta', respuesta, words)
   const result: any[] = []
   if (respuesta.length > 0) {
     for (let x = 0; x < respuesta.length; x++) {

@@ -64,8 +64,11 @@ const reverseSearch = async (siteId: string, search: string, compareOrder: strin
 }
 
 const searchByTitle = async (siteId: string, element: arcSimpleStory): Promise<arcSimpleStory|false> => {
-  const title = getAsyncWebGrammarly(element.title.replace(/:/g, '\\:').replace(/"/g, '\\"'))
-  const searchQuery = `headlines.basic:"${title.mod}"+AND+type:"story"`
+  // const title = getAsyncWebGrammarly(element.title.replace(/:/g, '\\:').replace(/"/g, '\\"'))
+  let title: string = element.title
+  title = title.replace(/[\:\“\”\\\"\#]/g, '')
+  const searchQuery = `headlines.basic:"${title}"+AND+type:"story"`
+  console.log('searchQuery', searchQuery)
   const data: any = await searchInArc(siteId, searchQuery)
   if (data !== 'fail') {
     const result: any = restructureAarcSimpleStory(siteId, data.content_elements[0])
@@ -143,6 +146,9 @@ const bucleSeachByTitleInSitesList = async (siteId: string, search: arcSimpleSto
   let find: arcSimpleStory | false = false
   for (const localIdSite of idListSites) {
     if (localIdSite !== 'mwnbrasil' && localIdSite !== 'novamulher' && localIdSite !== siteId) {
+      // const title = getAsyncWebGrammarly(search.title.replace(/:/g, '\\:').replace(/"/g, '\\"'))
+      const title = getAsyncWebGrammarly(search.title)
+      search.title = title.mod
       find = await searchByTitle(localIdSite, search)
       if (await find !== false) {
         return find
@@ -206,7 +212,9 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
   if (find === false) {
     const title = search.replace(/-/g, ' ')
     const generaTitulos = getAsyncWebGrammarly_(title)
-    for (const titulo of generaTitulos.result) {
+    for (let x = 0; x < generaTitulos.result.length; x++) {
+      console.log('Procesando registro ', x)
+      const titulo: string = generaTitulos.result[x]
       const input = {
         headlines: { basic: titulo },
         canonical_url: 'TESTNAHA',
@@ -214,7 +222,7 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
         _id: 'TESTNAHA',
         type: 'story'
       }
-      const element = await restructureAarcSimpleStory(siteId, input)
+      const element = restructureAarcSimpleStory(siteId, input)
       find = await searchByTitle(siteId, element)
       if (find !== false) {
         find.isTitleByIteration = true
