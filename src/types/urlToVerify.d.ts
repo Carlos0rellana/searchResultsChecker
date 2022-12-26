@@ -53,7 +53,7 @@ export interface ortographyChecker {
   mod: string
 }
 
-export interface ortographyChecker_ {
+export interface ortographyTitlePossibilities{
   origin: string
   result: any[]
 }

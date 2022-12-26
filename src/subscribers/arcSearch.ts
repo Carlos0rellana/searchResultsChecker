@@ -5,7 +5,7 @@ import sitesData from '../config/static_data/blocks.json'
 import { arcSimpleStory, typeOfLink } from '../types/urlToVerify'
 import { ratioElementsOptions, searchInArcItemOptions } from '../types/config'
 import { ratioWords } from '../utils/generic_utils'
-import { getAsyncWebGrammarly, getAsyncWebGrammarly_ } from '../subscribers/grammarly'
+import { getAsyncWebGrammarly, getAListOfPossiblesTitles } from '../subscribers/grammarly'
 
 const searchInArc = async (siteId: string, searchQuery: string, from: string = '0', size: string = '100'): Promise<string> => {
   const returnValues = '_id,website_url,websites,canonical_url,headlines.basic,type'
@@ -66,7 +66,7 @@ const reverseSearch = async (siteId: string, search: string, compareOrder: strin
 const searchByTitle = async (siteId: string, element: arcSimpleStory): Promise<arcSimpleStory|false> => {
   // const title = getAsyncWebGrammarly(element.title.replace(/:/g, '\\:').replace(/"/g, '\\"'))
   let title: string = element.title
-  title = title.replace(/[\:\“\”\\\"\#]/g, '')
+  title = title.replace(/[:“”#\\]/g, '')
   const searchQuery = `headlines.basic:"${title}"+AND+type:"story"`
   console.log('searchQuery', searchQuery)
   const data: any = await searchInArc(siteId, searchQuery)
@@ -200,7 +200,7 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
       find = await bucleSeachInSitesList(siteId, search, currentPriority)
     }
   }
-  if (find !== false && currentPriority === false && (find?.type === 'gallery' || find?.type === 'video')) {
+  if (find !== false && currentPriority === false && (find?.type === 'gallery' || find?.type === 'video' || find.site !== siteId)) {
     const checkByTitle = await searchByTitle(siteId, find)
     if (checkByTitle !== false) {
       return checkByTitle
@@ -211,15 +211,14 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
   }
   if (find === false) {
     const title = search.replace(/-/g, ' ')
-    const generaTitulos = getAsyncWebGrammarly_(title)
+    const generaTitulos = getAListOfPossiblesTitles(title)
     for (let x = 0; x < generaTitulos.result.length; x++) {
-      console.log('Procesando registro ', x)
       const titulo: string = generaTitulos.result[x]
       const input = {
         headlines: { basic: titulo },
-        canonical_url: 'TESTNAHA',
+        canonical_url: 'no url',
         site: siteId,
-        _id: 'TESTNAHA',
+        _id: 'no existe',
         type: 'story'
       }
       const element = restructureAarcSimpleStory(siteId, input)

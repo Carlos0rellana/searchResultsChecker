@@ -1,5 +1,5 @@
 import Typo from 'typo-js'
-import { ortographyChecker, ortographyChecker_ } from '../types/urlToVerify'
+import { ortographyChecker, ortographyTitlePossibilities } from '../types/urlToVerify'
 
 const dictionary = new Typo('es_ES', null, null, { dictionaryPath: 'typo/dictionaries' })
 
@@ -24,7 +24,7 @@ const bucleConfirm = (word: string): string => {
   return word
 }
 
-const bucleConfirm_ = (word: string): any[] => {
+const bucleGeneratorTitles = (word: string): any[] => {
   const result: any[] = []
   result.push(word)
   for (let letter = 0; letter < word.length; letter++) {
@@ -54,11 +54,6 @@ const validateWordGenerator = (word: string): string => {
   return currentWord
 }
 
-const validateWordGenerator_ = (word: string): any[] => {
-  const currentWord = bucleConfirm_(word)
-  return currentWord
-}
-
 export const getAsyncWebGrammarly = (phrase: string): ortographyChecker => {
   const phraseWordList = phrase.split(' ')
   let outputPhrase: string = ''
@@ -77,11 +72,11 @@ export const getAsyncWebGrammarly = (phrase: string): ortographyChecker => {
   return { origin: phrase, mod: outputPhrase }
 }
 
-export const getAsyncWebGrammarly_ = (phrase: string): ortographyChecker_ => {
+export const getAListOfPossiblesTitles = (phrase: string): ortographyTitlePossibilities => {
   const phraseWordList = phrase.split(' ')
   let result: any = []
   for (const word of phraseWordList) {
-    const words = validateWordGenerator_(word)
+    const words = bucleGeneratorTitles(word)
     result = generaRespuesta(result, words)
   }
   const respuesta: any[] = []
