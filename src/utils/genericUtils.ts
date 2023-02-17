@@ -1,8 +1,12 @@
-import { linkValues, typeOfLink, modLinkValues, method, statusCheck } from '../types/urlToVerify'
+import colors from 'ansi-colors'
 import axios, { AxiosError } from 'axios'
+
 import sitesData from '../config/static_data/blocks.json'
 import { identitySearch } from '../types/sites'
 import { ratioElementsOptions } from '../types/config'
+
+import { linkValues, filterOptions, typeOfLink, modLinkValues, method, statusCheck } from '../types/urlToVerify'
+import { settingBar } from './barUtils'
 
 const getGlobalContetType = (check: string): typeOfLink | null => {
   const find = 'Fusion.globalContent='
@@ -83,16 +87,49 @@ const getOutputTypeFromUrl = (url: string): string => {
   return outputType
 }
 
+export const genericFilter = (itemList: string[][]|null, options: filterOptions): modLinkValues[] => {
+  const result: modLinkValues[] = []
+  if (itemList !== null && itemList.length > 0) {
+    let key = 0
+    const barConfig = {
+      colorConfig: colors.bgCyan,
+      description: `Filter by ${options.type}`,
+      nameItems: `${options.type} URL checkeds`
+    }
+    const progressRevisionOfSearch = settingBar(barConfig)
+    console.log(`\nStart to filter by ${options.type}:`)
+    progressRevisionOfSearch.start(itemList.length, 0)
+    for (const info of itemList) {
+      const linkData: modLinkValues = getSimpleLinkValues(info, key)
+      const checkingType = options.type === 'any' ? (linkData.typeOfUrl === 'gallery' || linkData.typeOfUrl === 'story' || linkData.typeOfUrl === 'video' || linkData.typeOfUrl === 'search') : linkData.typeOfUrl === options.type
+      if (linkData.httpStatus !== null &&
+          (options.method === null || linkData.solution?.includes(options.method) === true) &&
+          linkData.httpStatus < options.httpStatus + 99 &&
+          linkData.httpStatus >= options.httpStatus &&
+          linkData.status === options.status &&
+          checkingType) {
+        result.push(linkData)
+      }
+      key++
+      progressRevisionOfSearch.update(key)
+    }
+    progressRevisionOfSearch.stop()
+  }
+  return result
+}
+
 export const ratioWords = (variableUrl: string, item: ratioElementsOptions): number => {
+  type ObjectKey = keyof typeof sitesData
+
   const splitConfig = item.type === 'url' ? '-' : ' '
   let countWords = 0
-  let sitios : any = sitesData;
-  let urlCompleta = sitios[item.siteId].siteProperties.feedDomainURL + '' + variableUrl;
-  let urlArc = geIdentiflyUrl(urlCompleta);
+
+  const urlCompleta = `${sitesData[item.siteId as ObjectKey].siteProperties.feedDomainURL} ${variableUrl}`
+  const urlArc = geIdentiflyUrl(urlCompleta)
   const searchWordsInUrl = item.valueToSearch.split(splitConfig)
   const urlWordsToCompare = urlArc.storyTitle.split(splitConfig)
   for (const element of searchWordsInUrl) {
-    if (urlWordsToCompare.includes(element.replace(/\*/gi,'').replace('canonical_url:',''))) {
+    if (urlWordsToCompare.includes(element.replace(/\*/gi, '').replace('canonical_url:', ''))) {
       countWords++
     }
   }
@@ -106,7 +143,7 @@ export const delay = async (ms: number): Promise<any> => {
 
 export const sanitizePathToWWWWpath = (url: string, protocol: string|null = null): string => {
   const formatToUrl = new URL(url)
-  let hostRoute = formatToUrl.hostname.replace('origin.', 'www.').replace('touch.', 'www.').replace('dev.', 'www.').replace('showbiz.', 'www.').replace('juegos.', 'www.').replace('mov.', 'www.')
+  let hostRoute = formatToUrl.hostname.replace(/(origin|touch|dev|showbiz|juegos|mov)./, 'www.')
   if (hostRoute.match('www.') === null) {
     hostRoute = `www.${hostRoute}`
   }

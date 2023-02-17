@@ -1,5 +1,5 @@
 import { accessToGoogleSheets, updateRowData } from '../subscribers/googleSheets'
-import { geIdentiflyUrl, getSimpleLinkValues } from '../utils/generic_utils'
+import { geIdentiflyUrl, getSimpleLinkValues } from '../utils/genericUtils'
 import { linkValues, modLinkValues } from '../types/urlToVerify'
 // import sitesData from '../config/static_data/blocks.json'
 

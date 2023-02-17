@@ -6,7 +6,7 @@ import { msgProgressBar } from '../types/progressBarMsgs'
 
 import cliProgress from 'cli-progress'
 import colors from 'ansi-colors'
-import { delay } from '../utils/generic_utils'
+import { delay } from '../utils/genericUtils'
 
 const googleInfo = {
   keyFile: './src/config/googleAccess.json',

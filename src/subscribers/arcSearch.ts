@@ -4,7 +4,7 @@ import { SitesList } from '../types/sites'
 import sitesData from '../config/static_data/blocks.json'
 import { arcSimpleStory, typeOfLink } from '../types/urlToVerify'
 import { ratioElementsOptions, searchInArcItemOptions } from '../types/config'
-import { ratioWords } from '../utils/generic_utils'
+import { ratioWords } from '../utils/genericUtils'
 import { getAsyncWebGrammarly, getAListOfPossiblesTitles } from '../subscribers/grammarly'
 
 const searchInArc = async (siteId: string, searchQuery: string, from: string = '0', size: string = '100'): Promise<string> => {

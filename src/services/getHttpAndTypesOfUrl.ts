@@ -1,6 +1,6 @@
 import { accessToGoogleSheets, createGoogleSheet } from '../subscribers/googleSheets'
 import { linkValues } from '../types/urlToVerify'
-import { fetchData, simpleRowData } from '../utils/generic_utils'
+import { fetchData, simpleRowData } from '../utils/genericUtils'
 
 import cliProgress from 'cli-progress'
 import colors from 'ansi-colors'
