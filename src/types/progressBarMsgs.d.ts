@@ -1,8 +1,8 @@
 import color from 'ansi-colors'
 
 export interface msgProgressBar {
-  description: string
-  nameItems: string
+  firstText: string
+  lastText: string
 }
 
 export interface barConfig extends msgProgressBar{

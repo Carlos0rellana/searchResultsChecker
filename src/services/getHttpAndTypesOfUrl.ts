@@ -7,6 +7,7 @@ import colors from 'ansi-colors'
 
 export const checkUrlsStatusFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
+    const start = new Date().getTime()
     const urlList: linkValues[] = []
     const rows = await simpleRowData(await accessToGoogleSheets(sheetId, 'Table'), 'URL')
     const progressRevision = new cliProgress.SingleBar({
@@ -30,6 +31,8 @@ export const checkUrlsStatusFromSheets = async (sheetId: string): Promise<linkVa
       progressRevision.stop()
     }
     await createGoogleSheet(urlList, 'Output', sheetId)
+    const end = (new Date().getTime() - start)/60000
+    console.log('\nTiempo de ejecución ===>',end,' min.\n')
     return urlList
   } catch (error) {
     console.error(error)

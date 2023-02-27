@@ -4,7 +4,7 @@ import { barConfig } from '../types/progressBarMsgs'
 
 export const settingBar = (barConfig: barConfig): SingleBar => {
   return new cliProgress.SingleBar({
-    format: `${barConfig.initText} | ${barConfig.colorConfig('{bar}')} | {percentage}% || {value}/{total} ${barConfig.endText}`,
+    format: `${barConfig.firstText} | ${barConfig.colorConfig('{bar}')} | {percentage}% || {value}/{total} ${barConfig.lastText}`,
     barCompleteChar: '\u2588',
     barIncompleteChar: '\u2591',
     hideCursor: true
@@ -14,8 +14,8 @@ export const settingBar = (barConfig: barConfig): SingleBar => {
 export const searchBarConfig = (searchText: string): SingleBar => {
   const barConfig = {
     colorConfig: colors.bgYellow,
-    initText: searchText,
-    endText: 'URLs'
+    firstText: searchText,
+    lastText: 'URLs'
   }
   return settingBar(barConfig)
 }
@@ -23,8 +23,8 @@ export const searchBarConfig = (searchText: string): SingleBar => {
 export const checkBarConfig = (checkText: string, checkStatus: string): SingleBar => {
   const barConfig = {
     colorConfig: colors.bgGreen,
-    initText: checkText,
-    endText: checkStatus
+    firstText: checkText,
+    lastText: checkStatus
   }
   return settingBar(barConfig)
 }

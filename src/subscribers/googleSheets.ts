@@ -4,9 +4,8 @@ import { GoogleAuth } from 'googleapis-common'
 import { linkValues, modLinkValues } from '../types/urlToVerify'
 import { msgProgressBar } from '../types/progressBarMsgs'
 
-import cliProgress from 'cli-progress'
-import colors from 'ansi-colors'
 import { delay } from '../utils/genericUtils'
+import { checkBarConfig } from '../utils/barUtils'
 
 const googleInfo = {
   keyFile: './src/config/googleAccess.json',
@@ -116,12 +115,7 @@ export const updateRowData = async (spreadSheetId: string, sheetName: string, po
 
 export const updateAgroupOfValuesInSheet = async (sheetId: string, urlListToMod: modLinkValues[], textForBar: msgProgressBar): Promise<boolean> => {
   if (urlListToMod.length > 0) {
-    const progressRevision = new cliProgress.SingleBar({
-      format: `${textForBar.description} | ${colors.green('{bar}')} | {percentage}% || {value}/{total} ${textForBar.nameItems}`,
-      barCompleteChar: '\u2588',
-      barIncompleteChar: '\u2591',
-      hideCursor: true
-    })
+    const progressRevision = checkBarConfig(textForBar.firstText,textForBar.lastText)
     let progressCount: number = 1
     progressRevision.start(urlListToMod.length, 0)
     for (const item of urlListToMod) {

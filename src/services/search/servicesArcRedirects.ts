@@ -1,15 +1,11 @@
-import { checkRedirect } from '../subscribers/arcRedirects'
-import { accessToGoogleSheets, updateRowData, updateAgroupOfValuesInSheet } from '../subscribers/googleSheets'
-import { searchBarConfig, checkBarConfig } from '../utils/barUtils'
-import { geIdentiflyUrl, sanitizePathToWWWWpath, delay, getSimpleLinkValues, fetchData, genericFilter } from '../utils/genericUtils'
+import { checkRedirect } from "../../subscribers/arcRedirects"
+import { updateAgroupOfValuesInSheet, accessToGoogleSheets, updateRowData } from "../../subscribers/googleSheets"
+import { msgProgressBar } from "../../types/progressBarMsgs"
+import { modLinkValues, filterOptions, linkValues } from "../../types/urlToVerify"
+import { allSites } from "../../utils/allSites"
+import { searchBarConfig, checkBarConfig } from "../../utils/barUtils"
+import { geIdentiflyUrl, sanitizePathToWWWWpath, genericFilter, delay, getSimpleLinkValues, fetchData } from "../../utils/genericUtils"
 
-import sitesData from '../config/static_data/blocks.json'
-
-import { SitesList } from '../types/sites'
-import { msgProgressBar } from '../types/progressBarMsgs'
-import { modLinkValues, linkValues, filterOptions } from '../types/urlToVerify'
-
-const allSites: SitesList = sitesData as SitesList
 
 export const searchRedirect = async (linkData: modLinkValues): Promise <modLinkValues|null> => {
   if (linkData.url !== null) {
@@ -68,8 +64,8 @@ const unificateCheckAndUpdate = async (sheetId: string, configFilter: filterOpti
       status: configFilter.status
     }
     const updateData: msgProgressBar = {
-      description: 'Update status',
-      nameItems: 'Url encontradas.'
+      firstText: 'Update status',
+      lastText: 'Url encontradas.'
     }
     return await unificateUpdate(sheetId, { filter: filterData, update: updateData }, rows)
   }
@@ -149,7 +145,7 @@ export const checkRedirectsFromSheets = async (sheetId: string): Promise<linkVal
   }
 }
 
-export const checkUrlInArcRedirectsFromSheetsWhenIsFoundInOtherUrl = async (sheetId: string): Promise< linkValues[] | null > => {
+export const searchAndUpdateExternalRedirectsInSheets = async (sheetId: string): Promise< linkValues[] | null > => {
   try {
     const filterData: filterOptions = {
       httpStatus: 400,
@@ -164,7 +160,7 @@ export const checkUrlInArcRedirectsFromSheetsWhenIsFoundInOtherUrl = async (shee
   }
 }
 
-export const checkUrlInArcRedirectsFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
+export const searchAndUpdateRedirectsInSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
     const filterData: filterOptions = {
       httpStatus: 400,

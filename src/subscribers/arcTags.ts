@@ -12,14 +12,10 @@ export const getTagBySlug = async (tagId: string): Promise<boolean> => {
   return await axios(config)
     .then(function (response) {
       const result = response.data
-      if (result?.Payload !== undefined) {
-        if (result.Payload.length > 0 && result.Payload[0] !== null) {
-          return true
-        }
-        return false
-      } else {
-        return false
+      if (result?.Payload !== undefined && result?.Payload.length > 0 && result?.Payload[0] !== null) {
+        return true
       }
+      return false
     })
     .catch(function (error) {
       console.log(error)

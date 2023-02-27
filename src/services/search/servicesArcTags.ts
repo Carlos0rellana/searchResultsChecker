@@ -1,12 +1,12 @@
-import { accessToGoogleSheets, updateAgroupOfValuesInSheet, updateRowData } from '../subscribers/googleSheets'
-import { genericFilter, fetchData } from '../utils/genericUtils'
+import { getTagBySlug } from "../../subscribers/arcTags"
+import { accessToGoogleSheets, updateRowData, updateAgroupOfValuesInSheet } from "../../subscribers/googleSheets"
+import { msgProgressBar } from "../../types/progressBarMsgs"
+import { modLinkValues, linkValues, filterOptions } from "../../types/urlToVerify"
+import { searchBarConfig } from "../../utils/barUtils"
+import { genericFilter, fetchData } from "../../utils/genericUtils"
 
-import { linkValues, filterOptions, modLinkValues } from '../types/urlToVerify'
-import { searchBarConfig } from '../utils/barUtils'
-import { getTagBySlug } from '../subscribers/arcTags'
-import { msgProgressBar } from '../types/progressBarMsgs'
 
-export const searchTag = async (tagItem: modLinkValues): Promise<modLinkValues|null> => {
+export const searchTag = async (tagItem: modLinkValues, forced:boolean): Promise<modLinkValues|null> => {
   if (tagItem.url !== null) {
     let tagSlug: string
     if (tagItem.url.match(/\/tags?\//) !== null) {
@@ -18,12 +18,16 @@ export const searchTag = async (tagItem: modLinkValues): Promise<modLinkValues|n
     if (await getTagBySlug(tagSlug)) {
       tagItem.solution = ['redirect']
       tagItem.probableSolution = `/tag/${tagSlug}`
-    } else {
+      tagItem.typeOfUrl='tag'
+      tagItem.status = 'process'
+      return tagItem
+    } else if(forced===true){
       tagItem.solution = ['create']
       tagItem.probableSolution = tagSlug
+      tagItem.typeOfUrl='tag'
+      tagItem.status = 'process'
+      return tagItem
     }
-    tagItem.status = 'process'
-    return tagItem
   }
   return null
 }
@@ -36,7 +40,7 @@ const searchTagsInArcBucle = async (itemList: modLinkValues[]): Promise<modLinkV
     const progressRevisionOfSearch = searchBarConfig('Search Tags in Arc')
     progressRevisionOfSearch.start(itemList.length, 0)
     for (const tagItem of itemList) {
-      const temp = await searchTag(tagItem)
+      const temp = await searchTag(tagItem,false)
       if (temp !== null) {
         findTags.push(temp)
       }
@@ -101,8 +105,8 @@ export const searchAndUpdateTagInSheets = async (sheetId: string): Promise<linkV
       const rowsToSaveInSheet = await searchTagsInArcBucle(rowsOfTags)
       if (await rowsToSaveInSheet.length > 0) {
         const barText: msgProgressBar = {
-          description: 'Update Tags in Sheets',
-          nameItems: 'updates.'
+          firstText: 'Update Tags in Sheets',
+          lastText: 'updates.'
         }
         await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
         return rowsToSaveInSheet
@@ -111,8 +115,8 @@ export const searchAndUpdateTagInSheets = async (sheetId: string): Promise<linkV
       }
     }
     return null
-  } catch (error) {
-    console.error(error)
+  } catch (_error) {
+    //console.error(error)
     return null
   }
 }

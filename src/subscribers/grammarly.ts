@@ -30,6 +30,7 @@ const bucleGeneratorTitles = (word: string): any[] => {
   for (let letter = 0; letter < word.length; letter++) {
     if (word[letter].match(/^[aeiouúAEIOUÚ]/) !== null) {
       const currentWord = word.substring(0, letter) + checkVocals(word[letter]) + word.substring(letter + 1)
+      console.log(currentWord)
       if (dictionary.check(currentWord)) {
         result.push(currentWord)
       }

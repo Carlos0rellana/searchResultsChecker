@@ -7,7 +7,7 @@ import { ratioElementsOptions, searchInArcItemOptions } from '../types/config'
 import { ratioWords } from '../utils/genericUtils'
 import { getAsyncWebGrammarly, getAListOfPossiblesTitles } from '../subscribers/grammarly'
 
-const searchInArc = async (siteId: string, searchQuery: string, from: string = '0', size: string = '100'): Promise<string> => {
+const searchInArc = async (siteId: string, searchQuery: string, from: string = '0', size: string = '100'): Promise<arcSimpleStory[]|null> => {
   const returnValues = '_id,website_url,websites,canonical_url,headlines.basic,type'
   const config = {
     method: 'get',
@@ -17,27 +17,31 @@ const searchInArc = async (siteId: string, searchQuery: string, from: string = '
       Authorization: access.token
     }
   }
-
-  console.log(`https://api.metroworldnews.arcpublishing.com/content/v4/search/published?\nwebsite=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}&from=${from}&size=${size}`)
-
   let query = null
   let iteraciones = 0
   while (query == null) {
     if (iteraciones > 10) {
-      return 'fail'
+      return null
     }
     query = await getData(config)
     iteraciones++
   }
 
   const result = query.data
-  if (result.content_elements !== undefined && result.content_elements.length > 0) {
-    console.log('\n========\n', result, '\n========\n')
-    return result
+  const isSearchByTitle = searchQuery.match(/headlines.basic:/) !== null
+  if(result.content_elements !== undefined && result.content_elements.length > 0) {
+    const resultList: arcSimpleStory[] = []
+    console.log(result)
+    for(const story of result.content_elements){
+      const tempStory = restructureAarcSimpleStory(siteId,story,isSearchByTitle)
+      resultList.push(tempStory)
+    }
+    console.log(resultList)
+    return resultList
   } else if (result.error_code !== undefined) {
-    return 'fail'
+    return null
   } else {
-    return 'fail'
+    return null
   }
 }
 
@@ -46,7 +50,7 @@ const getData = async (config: any): Promise<any|null> => {
     const result = await axios(config)
     return result
   } catch (err: any) {
-    console.log(err)
+    //console.log(err)
     return null
   }
 }
@@ -55,7 +59,7 @@ const reverseSearch = async (siteId: string, search: string, compareOrder: strin
   const searchQuery = `canonical_url:*${search}*`
   if (siteId === compareOrder[0]) {
     const find = searchInArc(siteId, searchQuery)
-    if (await find === 'fail') {
+    if (await find === null) {
       return await searchInArc(compareOrder[1], searchQuery)
     }
     return await find
@@ -68,28 +72,28 @@ const searchByTitle = async (siteId: string, element: arcSimpleStory): Promise<a
   let title: string = element.title
   title = title.replace(/[:“”#\\]/g, '')
   const searchQuery = `headlines.basic:"${title}"+AND+type:"story"`
-  console.log('searchQuery', searchQuery)
+  //console.log('searchQuery', searchQuery)
   const data: any = await searchInArc(siteId, searchQuery)
-  if (data !== 'fail') {
+  if (data !== null) {
     const result: any = restructureAarcSimpleStory(siteId, data.content_elements[0])
     return result
   }
   return false
 }
 
-const restructureAarcSimpleStory = (siteId: string, searchResult: any): arcSimpleStory => {
+const restructureAarcSimpleStory = (siteId: string, searchResult: any, searchByTitle:boolean=false): arcSimpleStory => {
   let titleFromInput = 'No title, because is a redirect'
   if (searchResult._id.match(/_redirect_/) === null &&
      searchResult?.headlines?.basic !== undefined) {
     titleFromInput = searchResult.headlines.basic
   }
   const currentUrl: arcSimpleStory = {
-    url: searchResult.canonical_url,
+    url: searchResult.website_url ?? searchResult.canonical_url ?? 'NOT DEFINED URL',
     site: siteId,
     id: searchResult._id,
     type: searchResult.type as typeOfLink,
     title: titleFromInput,
-    isTitleByIteration: false
+    isTitleByIteration: searchByTitle
   }
   return currentUrl
 }
@@ -100,7 +104,7 @@ const comparativeResult = (resultList: any, config: ratioElementsOptions, ratio:
     for (const element of resultList.content_elements) {
       if (element.canonical_url !== undefined) {
         const ratioValue = ratioWords(element.canonical_url, config)
-        console.log('ratioValue', ratioValue)
+        //console.log('ratioValue', ratioValue)
         if (returnValue === false && ratioValue >= ratio) {
           const currentUrl = restructureAarcSimpleStory(config.siteId, element)
           returnValue = [ratioValue, currentUrl]
@@ -116,27 +120,25 @@ const comparativeResult = (resultList: any, config: ratioElementsOptions, ratio:
 }
 
 const lookingForASite = async (searchConfig: searchInArcItemOptions): Promise <arcSimpleStory|false> => {
-  let mainSiteSearch: any = await searchInArc(searchConfig.siteId, searchConfig.search)
-  let currentUrl: arcSimpleStory
-  console.log('\n<////////////>\ninit search in Arc\n<////////////>\n')
-  if (mainSiteSearch === undefined || mainSiteSearch.message === 'fail') {
-    mainSiteSearch = await lookingForASite(searchConfig)
-  }
-  if (mainSiteSearch.count !== undefined && mainSiteSearch.count > 0) {
-    const config: ratioElementsOptions = {
-      type: searchConfig.type,
-      siteId: searchConfig.siteId,
-      valueToSearch: searchConfig.search
+  //console.log(`\nSearch in sites bucle ===> ${searchConfig.siteId}.....${searchConfig.search}`)
+  let mainSiteSearch: arcSimpleStory[] | null = await searchInArc(searchConfig.siteId, searchConfig.search)
+  if(mainSiteSearch!==null && mainSiteSearch.length>0){
+    const elements = mainSiteSearch.length
+    //console.log(mainSiteSearch)
+    if(elements===1){
+      return mainSiteSearch[0]
+    }else{
+      const config: ratioElementsOptions = {
+        type: searchConfig.type,
+        siteId: searchConfig.siteId,
+        valueToSearch: searchConfig.search
+      }
+      const checkingItem = comparativeResult(mainSiteSearch, config)
+      if ((checkingItem !== false && checkingItem.length > 0) || (checkingItem !== false && searchConfig.search.match('headlines.basic') !== null)) {
+        return checkingItem[1]
+      }
     }
-    const checkingItem = comparativeResult(mainSiteSearch, config)
-    if ((checkingItem !== false && checkingItem.length > 0) || (checkingItem !== false && searchConfig.search.match('headlines.basic') !== null)) {
-      currentUrl = checkingItem[1]
-      console.log('\n<////////////>\nend search in Arc\n<////////////>\n')
-      return currentUrl
-    }
   }
-  console.log(false)
-  console.log('\n<////////////>\nend search in Arc\n<////////////>\n')
   return false
 }
 
@@ -163,7 +165,7 @@ const bucleSeachInSitesList = async (siteId: string, search: string, currentPrio
   const idListSites = Object.keys(allSites)
   let find: arcSimpleStory | false = false
   for (const localIdSite of idListSites) {
-    console.log(`Buscando en el Sitio: ${localIdSite}`)
+    //console.log(`Buscando en el Sitio: ${localIdSite}`)
     if (localIdSite !== 'mwnbrasil' && localIdSite !== 'novamulher' && localIdSite !== siteId) {
       const searchQuery = `canonical_url:*${search}*`
       const searchConfig: searchInArcItemOptions = {
@@ -173,7 +175,7 @@ const bucleSeachInSitesList = async (siteId: string, search: string, currentPrio
         priority: currentPriority
       }
       find = await lookingForASite(searchConfig)
-      console.log('\nCheck In Site=========>\n', await find, '\n<=========\n')
+      //console.log('\nCheck In Site=========>\n', await find, '\n<=========\n')
       if (await find !== false) {
         return find
       }
@@ -212,6 +214,7 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
   if (find === false) {
     const title = search.replace(/-/g, ' ')
     const generaTitulos = getAListOfPossiblesTitles(title)
+    console.log('\nStart search by all posibilities titles ')
     for (let x = 0; x < generaTitulos.result.length; x++) {
       const titulo: string = generaTitulos.result[x]
       const input = {
@@ -222,12 +225,15 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
         type: 'story'
       }
       const element = restructureAarcSimpleStory(siteId, input)
+      //process.stdout.write(`\r\nSearch by Title: ==>${titulo} ${x}/${generaTitulos.result.length}`)
       find = await searchByTitle(siteId, element)
       if (find !== false) {
         find.isTitleByIteration = true
+        //process.stdout.write('\r')
         return find
       }
     }
+    //process.stdout.write('\r')
   }
   return find
 }

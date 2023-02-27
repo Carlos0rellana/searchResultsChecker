@@ -1,0 +1,220 @@
+{
+    "mwn": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.metroworldnews.com",
+            "resizerURL": "https://www.metroworldnews.com/resizer",
+            "feedTitle": "Metro World News",
+            "feedMarket": "none",
+            "gtmID": "GTM-P3ML4GP",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "timeZone": "America/Mexico_City"
+            }
+        }
+    },
+    "mwnchile": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.publimetro.cl",
+            "resizerURL": "https://www.publimetro.cl/resizer",
+            "feedTitle": "Publimetro Chile",
+            "feedMarket": "cl",
+            "gtmID": "GTM-W2XXJMF",
+            "feedLanguage": "es",
+            "searchId": "91822190f4599703e",
+            "dateLocalization": {
+                "timeZone": "America/Santiago"
+            }
+        }
+    },
+    "mwnmexico": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.publimetro.com.mx",
+            "resizerURL": "https://www.publimetro.com.mx/resizer",
+            "feedTitle": "Publimetro México",
+            "feedMarket": "mx",
+            "gtmID": "GTM-KWXW9T2",
+            "feedLanguage": "es",
+            "searchId": "9f31e9a300bc30f08"
+        }
+    },
+    "mwncolombia": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.publimetro.co",
+            "resizerURL": "https://www.publimetro.co/resizer",
+            "feedTitle": "Publimetro Colombia",
+            "gtmID": "GTM-MQ5B9D3",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "timeZone": "America/Bogota"
+            }
+        }
+    },
+    "mwnecuador": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.metroecuador.com.ec",
+            "resizerURL": "https://www.metroecuador.com.ec/resizer",
+            "feedTitle": "Metro Ecuador",
+            "gtmID": "GTM-W9SQTFN",
+            "feedLanguage": "es",
+            "searchId": "5d192a67a0f0a2b1f",
+            "dateLocalization": {
+                "timeZone": "America/Guayaquil"
+            }
+        }
+    },
+    "mwnperu": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.publimetro.pe",
+            "resizerURL": "https://www.publimetro.pe/resizer",
+            "feedTitle": "Publimetro Peru",
+            "gtmID": "GTM-KFBD8T5",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "timeZone": "America/Lima"
+            }
+        }
+    },
+    "ferplei": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.ferplei.com",
+            "resizerURL": "https://www.ferplei.com/resizer",
+            "feedTitle": "Ferplei",
+            "gtmID": "GTM-PJVVCVN",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "timeZone": "America/Santiago"
+            }
+        }
+    },
+    "fayerwayer": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.fayerwayer.com",
+            "resizerURL": "https://www.fayerwayer.com/resizer",
+            "feedTitle": "FayerWayer",
+            "gtmID": "GTM-NM75HST",
+            "searchId": "b4ad0123c356e6ebe",
+            "feedLanguage": "es"
+        }
+    },
+    "nuevamujer": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.nuevamujer.com",
+            "resizerURL": "https://www.nuevamujer.com/resizer",
+            "feedTitle": "Nueva Mujer",
+            "gtmID": "GTM-WRTTJJF",
+            "feedLanguage": "es"
+        }
+    },
+    "mwnbrasil": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.metroworldnews.com.br",
+            "resizerURL": "https://www.metroworldnews.com.br/resizer",
+            "feedTitle": "MWN Brasil",
+            "gtmID": "GTM-TBXZ7PK",
+            "feedLanguage": "br",
+            "dateLocalization": {
+                "language": "en",
+                "timeZone": "America/Sao_Paulo",
+                "dateTimeFormat": "%d/%m/%Y - %H:%M",
+                "dateFormat": "%d/%m/%Y"
+            }
+        }
+    },
+    "novamulher": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.novamulher.com",
+            "resizerURL": "https://www.novamulher.com/resizer",
+            "feedTitle": "Nova Mulher",
+            "gtmID": "GTM-NMQN9RC",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "language": "en",
+                "timeZone": "America/Sao_Paulo",
+                "dateTimeFormat": "%d/%m/%Y - %H:%M",
+                "dateFormat": "%d/%m/%Y"
+            }
+        }
+    },
+    "comutricolor": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.comutricolor.com",
+            "resizerURL": "https://www.comutricolor.com/resizer",
+            "feedTitle": "ComuTricolor",
+            "gtmID": "GTM-5XJ8H42",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "timeZone": "America/Bogota"
+            }
+        }
+    },
+    "mwnpuertorico": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.metro.pr",
+            "resizerURL": "https://www.metro.pr/resizer",
+            "feedTitle": "Metro Puerto Rico",
+            "gtmID": "GTM-PBWJTW3",
+            "feedLanguage": "es",
+            "searchId": "6414a1e17b28e4f44",
+            "dateLocalization": {
+                "timeZone": "America/Puerto_Rico"
+            }
+        }
+    },
+    "elcalce": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.elcalce.com",
+            "resizerURL": "https://www.elcalce.com/resizer",
+            "feedTitle": "El Calce",
+            "gtmID": "GTM-K3TSDZ2",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "timeZone": "America/Puerto_Rico"
+            }
+        }
+    },
+    "sabrosia": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.sabrosia.pr",
+            "resizerURL": "https://www.sabrosia.pr/resizer",
+            "feedTitle": "Sabrosía",
+            "gtmID": "GTM-KVWW32Z",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "timeZone": "America/Puerto_Rico"
+            }
+        }
+    },
+    "activo": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.activopr.com",
+            "resizerURL": "https://www.activopr.com/resizer",
+            "feedTitle": "Activo",
+            "gtmID": "GTM-TFJTJHM",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "timeZone": "America/Puerto_Rico"
+            }
+        }
+    },
+    "mwnargentina": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.publimetro.com.ar",
+            "resizerURL": "https://www.publimetro.com.ar/resizer",
+            "feedTitle": "Publimetro Argentina",
+            "gtmID": "GTM-TLDJJ65",
+            "feedLanguage": "es",
+            "dateLocalization": {
+                "timeZone": "Argentina/Buenos_Aires"
+            }
+        }
+    },
+    "sagrosso": {
+        "siteProperties": {
+            "feedDomainURL": "https://www.sagrosso.com",
+            "resizerURL": "https:/www.sagrosso.com/resizer",
+            "websiteName": "Sagrosso",
+            "feedLanguage": "es",
+            "gtmID": "GTM-MCTRV7X"
+        }
+    }
+}

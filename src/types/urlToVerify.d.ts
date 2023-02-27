@@ -55,5 +55,5 @@ export interface ortographyChecker {
 
 export interface ortographyTitlePossibilities{
   origin: string
-  result: any[]
+  result: string[]
 }

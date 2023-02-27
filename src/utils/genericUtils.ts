@@ -34,40 +34,29 @@ const getGlobalContetType = (check: string): typeOfLink | null => {
   }
 }
 
-const rudimentaryUrlDistribution = (url: string): typeOfLink => {
-  if (url.match(/\/tags?\//g) != null) {
+const rudimentaryUrlDistribution = async (url: string): Promise<typeOfLink> => {
+  const pathRoute = new URL(url).pathname
+  const lengthPath = pathRoute.replace(/^\//,'').replace(/\/$/, '').split('/').length
+  
+  if(lengthPath === 1){
+    return 'rare'
+  }else if(pathRoute.match(/\/categor(y|ia)\//) !== null){
+    return 'section'
+  }else if (pathRoute.match(/\/tags?\//g) != null) {
     return 'tag'
-  } else if (url.match(/videos?/) !== null) {
+  } else if (pathRoute.match(/videos?/) !== null) {
     return 'video'
-  } else if (url.match(/\/buscador\//) !== null) {
+  } else if (pathRoute.match(/\/buscador\//) !== null) {
     return 'search'
-  } else if ((url.match(/galerias?/) != null) || (url.match(/fotos?/) != null)) {
+  } else if ((pathRoute.match(/galerias?|fotos?/) != null)) {
     return 'gallery'
-  } else if (url.match(/\/autor(es)?/) != null || url.match(/\/author\//) != null) {
+  } else if (pathRoute.match(/\/auth?or(es)?\/?/) != null) {
     return 'author'
-  } else if (url.includes('.png') || url.includes('.xml') || url.includes('.jpeg') || url.includes('.jpg')) {
+  } else if (pathRoute.includes('.png') || pathRoute.includes('.xml') || pathRoute.includes('.jpeg') || pathRoute.includes('.jpg')) {
     return 'file'
   } else {
     return 'story'
   }
-}
-
-const urlFormating = (url: string): string | null => {
-  // const currentUrl = allSites[websiteId].siteProperties.feedDomainURL
-  const crossWeb = 'https://www'
-  if (url.includes('https://touch.')) {
-    return crossWeb + url.slice(13)
-  }
-  if (url.includes('http://touch.')) {
-    return crossWeb + url.slice(12)
-  }
-  if (url.includes('https://origin.')) {
-    return crossWeb + url.slice(14)
-  }
-  if (url.includes('http://origin.')) {
-    return crossWeb + url.slice(13)
-  }
-  return null
 }
 
 const getOutputTypeFromUrl = (url: string): string => {
@@ -93,15 +82,15 @@ export const genericFilter = (itemList: string[][]|null, options: filterOptions)
     let key = 0
     const barConfig = {
       colorConfig: colors.bgCyan,
-      description: `Filter by ${options.type}`,
-      nameItems: `${options.type} URL checkeds`
+      firstText: `Filter by ${options.type}`,
+      lastText: `${options.type} URL checkeds`
     }
     const progressRevisionOfSearch = settingBar(barConfig)
     console.log(`\nStart to filter by ${options.type}:`)
     progressRevisionOfSearch.start(itemList.length, 0)
     for (const info of itemList) {
       const linkData: modLinkValues = getSimpleLinkValues(info, key)
-      const checkingType = options.type === 'any' ? (linkData.typeOfUrl === 'gallery' || linkData.typeOfUrl === 'story' || linkData.typeOfUrl === 'video' || linkData.typeOfUrl === 'search') : linkData.typeOfUrl === options.type
+      const checkingType = options.type === 'any' ? (linkData.typeOfUrl === 'gallery' || linkData.typeOfUrl === 'story' || linkData.typeOfUrl === 'video' || linkData.typeOfUrl === 'search' || linkData.typeOfUrl === 'rare' ) : linkData.typeOfUrl === options.type
       if (linkData.httpStatus !== null &&
           (options.method === null || linkData.solution?.includes(options.method) === true) &&
           linkData.httpStatus < options.httpStatus + 99 &&
@@ -237,7 +226,7 @@ export const fetchData = async (url: string): Promise<linkValues> => {
     status: 'none'
   }
   try {
-    const validateUrl = urlFormating(url)
+    const validateUrl = sanitizePathToWWWWpath(url)
     let currentUrl = url
     if (validateUrl !== null) {
       currentUrl = validateUrl
@@ -265,7 +254,7 @@ export const fetchData = async (url: string): Promise<linkValues> => {
     const err = error as AxiosError
     if (err.response != null && err.response !== undefined) {
       currentData.httpStatus = err.response.status
-      currentData.typeOfUrl = rudimentaryUrlDistribution(url)
+      currentData.typeOfUrl = await rudimentaryUrlDistribution(url)
     }
     return currentData
   }
