@@ -140,11 +140,18 @@ export const sanitizePathToWWWWpath = (url: string, protocol: string|null = null
   return (pre + hostRoute + formatToUrl.pathname)
 }
 
+export const getSiteIdFromUrl = (url:URL): string => {
+  let tempSiteId = ''
+  Object.entries(sitesData).forEach((element) => {
+    const currenturl = element[1].siteProperties.feedDomainURL
+    if (currenturl.match(url.hostname)!==null) {
+      tempSiteId = element[0]
+    }
+  })
+  return tempSiteId
+}
+
 export const geIdentiflyUrl = (url: string): identitySearch => {
-  const site: identitySearch = {
-    siteId: '',
-    storyTitle: ''
-  }
   url = sanitizePathToWWWWpath(url)
   const URI = new URL(url)
   const segmentedUrl = URI.pathname.split('/')
@@ -152,12 +159,11 @@ export const geIdentiflyUrl = (url: string): identitySearch => {
   const galeria = /\/galeria\/$/
   const video = /\/video\/$/
   const attachment = /\/attachment\/(.*)?\/?$/
-  Object.entries(sitesData).forEach((element) => {
-    const currenturl = element[1].siteProperties.feedDomainURL
-    if (`${URI.protocol}//${URI.hostname}` === currenturl) {
-      site.siteId = element[0]
-    }
-  })
+  const site: identitySearch = {
+    siteId: getSiteIdFromUrl(URI),
+    storyTitle: ''
+  }
+  
   if (URI.pathname.match(/^\/autor\//) != null) {
     site.storyTitle = segmentedUrl[1]
   } else if (URI.pathname.match(attachment) != null) {

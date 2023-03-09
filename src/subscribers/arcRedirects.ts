@@ -1,60 +1,34 @@
-import axios, { AxiosRequestConfig } from 'axios'
-import * as access from '../config/tokenAccessArc.json'
-
 import { SitesList } from '../types/sites'
 import sitesData from '../config/static_data/blocks.json'
+import { getDataFromArc } from '../models/getDataFromArc'
+import { createInArc } from '../models/addDataFromArc'
+import { deleteDataFromArc } from '../models/deleteDataFromArc'
 
 const allSites: SitesList = sitesData as SitesList
 
-const axiosConfig = (siteId: string, url: string, data: string = '', method: string = 'get'): AxiosRequestConfig => {
-  const hostName = allSites[siteId]?.siteProperties.feedDomainURL
-  if (hostName !== undefined && url.includes(hostName)) {
-    const currentPath = new URL(url)
-    url = currentPath.pathname
-  }
-  return {
-    method: method,
-    url: `https://api.metroworldnews.arcpublishing.com/draft/v1/redirect/${siteId}/${url}`,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: access.token
-    },
-    data: data
-  }
-}
-
 export const makeRedirect = async (siteId: string, urlToFrom: string, urlToGo: string): Promise<false|string> => {
   const hostName = allSites[siteId]?.siteProperties.feedDomainURL
-  if (hostName !== undefined && urlToFrom.includes(hostName)) {
-    const originPath = new URL(urlToFrom)
-    urlToFrom = originPath.pathname
-  }
-  if (hostName !== undefined && urlToGo.includes(hostName)) {
-    const destinyPath = new URL(urlToGo)
-    urlToGo = destinyPath.pathname
-  }
-  let send = null
-  if (urlToGo.match(/\//) !== null) {
-    send = JSON.stringify({
-      redirect_to: urlToGo
-    })
-  } else {
-    send = JSON.stringify({
-      document_id: urlToGo
-    })
-  }
+  if (hostName !== undefined){
+    if(urlToFrom.includes(hostName)) {
+      urlToFrom = new URL(urlToFrom).pathname
+    }
+    if(urlToGo.includes(hostName)) {
+      urlToGo = new URL(urlToGo).pathname
+    }
 
-  const config = {
-    method: 'post',
-    url: `https://api.metroworldnews.arcpublishing.com/draft/v1/redirect/${siteId}/${urlToFrom}`,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: access.token
-    },
-    data: send
-  }
+    // setea si entra un id en vez de una url para redireccionar
+    let send = null
+    if (urlToGo.match(/\//) !== null) {
+      send = JSON.stringify({
+        redirect_to: urlToGo
+      })
+    } else {
+      send = JSON.stringify({
+        document_id: urlToGo
+      })
+    }
 
-  return await axios(config)
+    return await createInArc(`/draft/v1/redirect/${siteId}/${urlToFrom}`, send)
     .then(function (response) {
       const result = response.data
       if (result.create_at !== undefined) {
@@ -69,11 +43,12 @@ export const makeRedirect = async (siteId: string, urlToFrom: string, urlToGo: s
       console.log('Error de redirección ====>', error)
       return false
     })
+  }
+  return false
 }
 
 export const checkRedirect = async (siteId: string, urlToSearch: string): Promise<string|null> => {
-  const config = axiosConfig(siteId, urlToSearch)
-  return await axios(config)
+  return await getDataFromArc(`/draft/v1/redirect/${siteId}/${urlToSearch}`)
     .then(function (response) {
       const result = response.data
       if (result?.redirect_to !== undefined) {
@@ -91,8 +66,7 @@ export const checkRedirect = async (siteId: string, urlToSearch: string): Promis
 }
 
 export const deleteRedirect = async (siteId: string, urlToDelete: string): Promise<boolean> => {
-  const config = axiosConfig(siteId, urlToDelete, '', 'delete')
-  return await axios(config)
+  return await deleteDataFromArc(`/draft/v1/redirect/${siteId}/${urlToDelete}`)
     .then(function (response) {
       const result = response.data
       if (result?.redirect_to !== undefined) {

@@ -1,5 +1,5 @@
 {
-  "name": "searchresultschecker",
+  "name": "swiss-knife",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,6 +7,7 @@
     "tsc": "tsc",
     "start": "npm run build/index.js",
     "dev": "ts-node-dev src/index.ts",
+    "sand": "SANDBOX=dev npm run dev",
     "lint": "ts-standard",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

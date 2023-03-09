@@ -1,58 +1,50 @@
-import axios from 'axios'
-import * as access from '../config/tokenAccessArc.json'
+import { AxiosResponse } from 'axios'
 import { SitesList } from '../types/sites'
 import sitesData from '../config/static_data/blocks.json'
 import { arcSimpleStory, typeOfLink } from '../types/urlToVerify'
 import { ratioElementsOptions, searchInArcItemOptions } from '../types/config'
 import { ratioWords } from '../utils/genericUtils'
 import { getAsyncWebGrammarly, getAListOfPossiblesTitles } from '../subscribers/grammarly'
+import { getDataFromArc } from '../models/getDataFromArc'
+
+
+const iterativeQuery =async (queryString:string): Promise <AxiosResponse|null> => {
+  for(let x = 0 ; x < 10 ; x++) {
+    try {
+      await getDataFromArc(queryString)
+      .then(function (response) {
+        return response
+      })
+    } catch (_error) {
+      //console.log(_error)
+      return null
+    }
+  }
+  return null
+}
 
 const searchInArc = async (siteId: string, searchQuery: string, from: string = '0', size: string = '100'): Promise<arcSimpleStory[]|null> => {
   const returnValues = '_id,website_url,websites,canonical_url,headlines.basic,type'
-  const config = {
-    method: 'get',
-    url: `https://api.metroworldnews.arcpublishing.com/content/v4/search/published?website=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}&from=${from}&size=${size}`,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: access.token
-    }
-  }
-  let query = null
-  let iteraciones = 0
-  while (query == null) {
-    if (iteraciones > 10) {
+  const queryString = `/content/v4/search/published?website=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}&from=${from}&size=${size}`
+  let result: any = await iterativeQuery(queryString)
+  if(result !== null && result?.data?.content_elements !== undefined ){
+    const isSearchByTitle = searchQuery.match(/headlines.basic:/) !== null
+    if(result.content_elements !== undefined && result.content_elements.length > 0) {
+      const resultList: arcSimpleStory[] = []
+      console.log(result)
+      for(const story of result.content_elements){
+        const tempStory = restructureAarcSimpleStory(siteId,story,isSearchByTitle)
+        resultList.push(tempStory)
+      }
+      console.log(resultList)
+      return resultList
+    } else if (result.error_code !== undefined) {
+      return null
+    } else {
       return null
     }
-    query = await getData(config)
-    iteraciones++
   }
-
-  const result = query.data
-  const isSearchByTitle = searchQuery.match(/headlines.basic:/) !== null
-  if(result.content_elements !== undefined && result.content_elements.length > 0) {
-    const resultList: arcSimpleStory[] = []
-    console.log(result)
-    for(const story of result.content_elements){
-      const tempStory = restructureAarcSimpleStory(siteId,story,isSearchByTitle)
-      resultList.push(tempStory)
-    }
-    console.log(resultList)
-    return resultList
-  } else if (result.error_code !== undefined) {
-    return null
-  } else {
-    return null
-  }
-}
-
-const getData = async (config: any): Promise<any|null> => {
-  try {
-    const result = await axios(config)
-    return result
-  } catch (err: any) {
-    //console.log(err)
-    return null
-  }
+  return null
 }
 
 const reverseSearch = async (siteId: string, search: string, compareOrder: string[]): Promise <any|null> => {

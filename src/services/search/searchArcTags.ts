@@ -1,6 +1,5 @@
-import { getTagBySlug } from "../../subscribers/arcTags"
-import { accessToGoogleSheets, updateRowData, updateAgroupOfValuesInSheet } from "../../subscribers/googleSheets"
-import { msgProgressBar } from "../../types/progressBarMsgs"
+import { validateTagBySlug } from "../../subscribers/arcTags"
+import { accessToGoogleSheets, updateRowLinkValues} from "../../subscribers/googleSheets"
 import { modLinkValues, linkValues, filterOptions } from "../../types/urlToVerify"
 import { searchBarConfig } from "../../utils/barUtils"
 import { genericFilter, fetchData } from "../../utils/genericUtils"
@@ -15,7 +14,7 @@ export const searchTag = async (tagItem: modLinkValues, forced:boolean): Promise
       tagSlug = new URL(tagItem.url).pathname.split('/')[1]
     }
     tagSlug = tagSlug.match(/\//) !== null ? tagSlug.split('/')[0] : tagSlug
-    if (await getTagBySlug(tagSlug)) {
+    if (await validateTagBySlug(tagSlug)) {
       tagItem.solution = ['redirect']
       tagItem.probableSolution = `/tag/${tagSlug}`
       tagItem.typeOfUrl='tag'
@@ -32,7 +31,7 @@ export const searchTag = async (tagItem: modLinkValues, forced:boolean): Promise
   return null
 }
 
-const searchTagsInArcBucle = async (itemList: modLinkValues[]): Promise<modLinkValues[]> => {
+export const searchTagsInArcBucle = async (itemList: modLinkValues[]): Promise<modLinkValues[]> => {
   console.log('\nStart to search in Arc:')
   const findTags: modLinkValues[] = []
   if (itemList.length > 0) {
@@ -77,7 +76,7 @@ export const checkTagsFromSheets = async (sheetId: string): Promise<linkValues[]
             } else {
               currentTagValues.status = 'ok'
             }
-            await updateRowData(sheetId, 'Output', tagLink.position, currentTagValues)
+            await updateRowLinkValues(sheetId, 'Output', tagLink.position, currentTagValues)
             urlList.push(currentTagValues)
           }
         }
@@ -87,36 +86,6 @@ export const checkTagsFromSheets = async (sheetId: string): Promise<linkValues[]
     return null
   } catch (error) {
     console.error(error)
-    return null
-  }
-}
-
-export const searchAndUpdateTagInSheets = async (sheetId: string): Promise<linkValues[]|null> => {
-  try {
-    const rows = await accessToGoogleSheets(sheetId, 'Output')
-    if (await rows !== undefined && await rows !== null) {
-      const options: filterOptions = {
-        httpStatus: 400,
-        method: null,
-        type: 'tag',
-        status: 'none'
-      }
-      const rowsOfTags = genericFilter(rows, options)
-      const rowsToSaveInSheet = await searchTagsInArcBucle(rowsOfTags)
-      if (await rowsToSaveInSheet.length > 0) {
-        const barText: msgProgressBar = {
-          firstText: 'Update Tags in Sheets',
-          lastText: 'updates.'
-        }
-        await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
-        return rowsToSaveInSheet
-      } else {
-        console.log('No se modificaron celdas.')
-      }
-    }
-    return null
-  } catch (_error) {
-    //console.error(error)
     return null
   }
 }

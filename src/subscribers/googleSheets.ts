@@ -12,6 +12,36 @@ const googleInfo = {
   scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/spreadsheets.readonly']
 }
 
+export const checkSpreadSheet =async (sheetId:string,sheetName:string,caseSensitive:boolean=false):Promise <boolean> => {
+  try {
+    const auth = new google.auth.GoogleAuth(googleInfo)
+    const sheets = await google.sheets('v4')
+    const requestForData = {
+      spreadsheetId: sheetId,
+      auth
+    }
+    const specificSheets = (await sheets.spreadsheets.get(requestForData)).data.sheets
+    if(specificSheets!==undefined){
+      for(const page of specificSheets){
+        let nameInSheet = page.properties?.title
+        let nameToSearch = sheetName
+        if(!caseSensitive){
+          nameInSheet = nameInSheet?.toLowerCase()
+          nameToSearch = nameToSearch.toLowerCase()
+        }
+        if(nameInSheet===nameToSearch){        
+          return true
+        }
+      }
+    }
+    return false
+  } catch (error) {
+    //console.log(error)
+    return false
+  }
+  
+}
+
 export const accessToGoogleSheets = async (sheetId: string, sheetName: string): Promise<string[][]|null> => {
   const currentList: string[][] = []
   try {
@@ -50,37 +80,23 @@ export const accessToGoogleSheets = async (sheetId: string, sheetName: string): 
   }
 }
 
-export const createGoogleSheet = async (arr: linkValues[], sheetname: string, spreadsheetId: string): Promise<linkValues[]|null> => {
+export const createGoogleSheet = async (arr: string[][], sheetname: string, spreadsheetId: string): Promise<linkValues[]|null> => {
   try {
     const auth = new google.auth.GoogleAuth(googleInfo)
     const sheets = await google.sheets('v4')
-    const tempArray: string[][] = []
-    tempArray.push(['URL', 'httpStatus', 'typeOfUrl', 'outputType', 'solution', 'method', 'status'])
-    for (let index = 0; index < arr.length; index++) {
-      tempArray.push([
-        String(arr[index].url),
-        String(arr[index].httpStatus),
-        String(arr[index].typeOfUrl),
-        String(arr[index].outputType),
-        String(arr[index].probableSolution),
-        String(arr[index].solution),
-        arr[index].status
-      ])
-    }
     const requestForData = {
       spreadsheetId: spreadsheetId,
       range: sheetname,
       valueInputOption: 'USER_ENTERED',
       resource: {
         majorDimension: 'ROWS',
-        values: tempArray
+        values: arr
       },
       auth
     }
 
     await createNewSheet(sheets, spreadsheetId, sheetname, auth)
-    const result = await sheets.spreadsheets.values.update(requestForData)
-    console.log(result)
+    await sheets.spreadsheets.values.update(requestForData)
   } catch (error) {
     console.log(error)
   }
@@ -88,24 +104,18 @@ export const createGoogleSheet = async (arr: linkValues[], sheetname: string, sp
   return null
 }
 
-export const updateRowData = async (spreadSheetId: string, sheetName: string, position: number, dataValues: linkValues): Promise<any> => {
+
+export const updateRowData = async (spreadSheetId: string, sheetName: string, position: number, dataValues: string[]): Promise<any> => {
+  const letters = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L','M', 'N', 'O', 'P', 'Q', 'R',  'S', 'T', 'U', 'V', 'W', 'X','Y', 'Z']
   const auth = new google.auth.GoogleAuth(googleInfo)
   const sheets = await google.sheets('v4')
   const requestForData = {
     spreadsheetId: spreadSheetId,
-    range: `${sheetName}!A${position}:G${position}`,
+    range: `${sheetName}!A${position}:${letters[dataValues.length-1]}${position}`,
     valueInputOption: 'USER_ENTERED',
     resource: {
       majorDimension: 'ROWS',
-      values: [[
-        dataValues.url,
-        dataValues.httpStatus,
-        dataValues.typeOfUrl,
-        dataValues.outputType,
-        dataValues.probableSolution,
-        dataValues.solution?.join(),
-        dataValues.status
-      ]]
+      values: [dataValues]
     },
     auth
   }
@@ -113,7 +123,20 @@ export const updateRowData = async (spreadSheetId: string, sheetName: string, po
   return result
 }
 
-export const updateAgroupOfValuesInSheet = async (sheetId: string, urlListToMod: modLinkValues[], textForBar: msgProgressBar): Promise<boolean> => {
+export const updateRowLinkValues = async (spreadSheetId: string, sheetName: string, position: number, dataValues: linkValues): Promise<any> => {
+  const dataToStringArray = [
+    `${dataValues.url}`,
+    `${dataValues.httpStatus}`,
+    `${dataValues.typeOfUrl}`,
+    `${dataValues.outputType}`,
+    `${dataValues.probableSolution}`,
+    `${dataValues.solution?.join()}`,
+    `${dataValues.status}`
+  ]
+  return updateRowData(spreadSheetId,sheetName,position,dataToStringArray)
+}
+
+export const updateGroupLinkValuesInSheet = async (sheetId: string, urlListToMod: modLinkValues[], textForBar: msgProgressBar): Promise<boolean> => {
   if (urlListToMod.length > 0) {
     const progressRevision = checkBarConfig(textForBar.firstText,textForBar.lastText)
     let progressCount: number = 1
@@ -121,7 +144,7 @@ export const updateAgroupOfValuesInSheet = async (sheetId: string, urlListToMod:
     for (const item of urlListToMod) {
       if (item.url !== null) {
         const externalLink: linkValues = item as linkValues
-        await updateRowData(sheetId, 'Output', item.position, externalLink)
+        await updateRowLinkValues(sheetId, 'Output', item.position, externalLink)
         await delay(1000)
       }
       progressRevision.update(progressCount)

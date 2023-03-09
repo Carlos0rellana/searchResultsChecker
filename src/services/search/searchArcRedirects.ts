@@ -1,10 +1,9 @@
 import { checkRedirect } from "../../subscribers/arcRedirects"
-import { updateAgroupOfValuesInSheet, accessToGoogleSheets, updateRowData } from "../../subscribers/googleSheets"
-import { msgProgressBar } from "../../types/progressBarMsgs"
-import { modLinkValues, filterOptions, linkValues } from "../../types/urlToVerify"
+import { accessToGoogleSheets, updateRowLinkValues } from "../../subscribers/googleSheets"
+import { modLinkValues, linkValues } from "../../types/urlToVerify"
 import { allSites } from "../../utils/allSites"
 import { searchBarConfig, checkBarConfig } from "../../utils/barUtils"
-import { geIdentiflyUrl, sanitizePathToWWWWpath, genericFilter, delay, getSimpleLinkValues, fetchData } from "../../utils/genericUtils"
+import { geIdentiflyUrl, sanitizePathToWWWWpath, delay, getSimpleLinkValues, fetchData } from "../../utils/genericUtils"
 
 
 export const searchRedirect = async (linkData: modLinkValues): Promise <modLinkValues|null> => {
@@ -40,39 +39,7 @@ export const searchRedirect = async (linkData: modLinkValues): Promise <modLinkV
   return null
 }
 
-const unificateUpdate = async (sheetId: string, barsConfig: {filter: filterOptions, update: msgProgressBar}, rows: string[][]|null): Promise<modLinkValues[]|null> => {
-  if (rows !== null) {
-    const rowsOfRedirect = genericFilter(rows, barsConfig.filter)
-    const rowsToSaveInSheet = await searchRedirectsBucle(rowsOfRedirect)
-    if (await rowsToSaveInSheet.length > 0) {
-      await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barsConfig.update)
-      return rowsToSaveInSheet
-    } else {
-      console.log('No se encontrarons redireccionamientos en Arc.')
-    }
-  }
-  return null
-}
-
-const unificateCheckAndUpdate = async (sheetId: string, configFilter: filterOptions): Promise < modLinkValues[] | null > => {
-  const rows = await accessToGoogleSheets(sheetId, 'Output')
-  if (await rows !== null) {
-    const filterData: filterOptions = {
-      httpStatus: configFilter.httpStatus,
-      method: configFilter.method,
-      type: configFilter.type,
-      status: configFilter.status
-    }
-    const updateData: msgProgressBar = {
-      firstText: 'Update status',
-      lastText: 'Url encontradas.'
-    }
-    return await unificateUpdate(sheetId, { filter: filterData, update: updateData }, rows)
-  }
-  return null
-}
-
-const searchRedirectsBucle = async (itemList: modLinkValues[]): Promise<modLinkValues[]> => {
+export const searchRedirectsBucle = async (itemList: modLinkValues[]): Promise<modLinkValues[]> => {
   console.log('\nStart to search in Arc:')
   const findUrl: modLinkValues[] = []
   if (itemList.length > 0) {
@@ -125,12 +92,12 @@ export const checkRedirectsFromSheets = async (sheetId: string): Promise<linkVal
           const httpResponseCheck = await fetchData(item.url)
           if (typeof httpResponseCheck.httpStatus === 'number' && httpResponseCheck.httpStatus < 400 && item.url !== 'undefined') {
             externalLink.status = 'ok'
-            await updateRowData(sheetId, 'Output', item.position, externalLink)
+            await updateRowLinkValues(sheetId, 'Output', item.position, externalLink)
           } else if (redirect !== null) {
             externalLink.status = 'manual'
             externalLink.probableSolution = redirect
             externalLink.solution = ['redirect', 'resolver']
-            await updateRowData(sheetId, 'Output', item.position, externalLink)
+            await updateRowLinkValues(sheetId, 'Output', item.position, externalLink)
           }
         }
         progressRevision.update(progressCount)
@@ -139,36 +106,6 @@ export const checkRedirectsFromSheets = async (sheetId: string): Promise<linkVal
       progressRevision.stop()
     }
     return urlList
-  } catch (error) {
-    console.error(error)
-    return null
-  }
-}
-
-export const searchAndUpdateExternalRedirectsInSheets = async (sheetId: string): Promise< linkValues[] | null > => {
-  try {
-    const filterData: filterOptions = {
-      httpStatus: 400,
-      method: 'redirect',
-      type: 'any',
-      status: 'findUrlWithRedirectTo'
-    }
-    return await unificateCheckAndUpdate(sheetId, filterData)
-  } catch (error) {
-    console.error(error)
-    return null
-  }
-}
-
-export const searchAndUpdateRedirectsInSheets = async (sheetId: string): Promise<linkValues[]|null> => {
-  try {
-    const filterData: filterOptions = {
-      httpStatus: 400,
-      method: null,
-      type: 'any',
-      status: 'none'
-    }
-    return await unificateCheckAndUpdate(sheetId, filterData)
   } catch (error) {
     console.error(error)
     return null

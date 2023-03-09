@@ -1,21 +1,28 @@
-import express from 'express'
+import express from "express"
 import asyncHandler from 'express-async-handler'
-import { checkUrlsStatusFromSheets } from '../services/getHttpAndTypesOfUrl'
-import { checkAuthorInOutput } from '../services/search/servicesArcAuthor'
-import { deleteRedirectsFromSheets, proccessRedirectsFromSheets, proccessTagsFromSheets } from '../services/processDataFromSheets'
-import { checkRedirectsFromSheets, searchAndUpdateRedirectsInSheets, searchAndUpdateExternalRedirectsInSheets } from '../services/search/servicesArcRedirects'
-import { searchAndUpdateTagInSheets, checkTagsFromSheets } from '../services/search/servicesArcTags'
-import { searchAndUpdatePosibilitiesInSheets } from '../services/search/servicesCompleteSearchUrls'
-import { check404inGoogle, searchAndUpdateGoogleInSheets } from '../services/search/servicesGoogleSearch'
-import { searchAndUpdateMetroInSheets } from '../services/search/servicesMetroSearch'
-import { searchAndUpdateCirculateInSheets } from '../services/search/servicesArcCirculate'
-import { searchAndUpdateSitemapsInSheets } from '../services/search/servicesArcSitemaps'
+import { checkUrlsStatusFromSheets } from "../services/getHttpAndTypesOfUrl"
+import { proccessRedirectsFromSheets, proccessTagsFromSheets, deleteRedirectsFromSheets } from "../services/processDataFromSheets"
+import { checkAuthorInOutput } from "../services/search/searchArcAuthor"
+import { checkRedirectsFromSheets } from "../services/search/searchArcRedirects"
+import { checkTagsFromSheets } from "../services/search/searchArcTags"
+import { check404inGoogle } from "../services/search/searchInGoogle"
+import { searchAndUpdateCirculateInSheets } from "../services/updates/googleSheets/arcCirculate"
+import { searchAndUpdateRedirectsInSheets, searchAndUpdateExternalRedirectsInSheets } from "../services/updates/googleSheets/arcRedirects"
+import { searchAndUpdateSitemapsInSheets } from "../services/updates/googleSheets/arcSitemaps"
+import { searchAndUpdateTagInSheets } from "../services/updates/googleSheets/arcTags"
+import { searchAndUpdateGoogleInSheets } from "../services/updates/googleSheets/googleApi"
+import { searchAndUpdateMetroInSheets } from "../services/updates/googleSheets/metroDb"
+import { searchAndUpdatePosibilitiesInSheets } from "../services/updates/googleSheets/secuentialAll"
+import { searchAndUpdateArticlesBucle } from "../services/updates/updateArcArticle"
+
+
 
 export const showGoogleSheets = express.Router()
 export const checkAuthors = express.Router()
 export const checkStories = express.Router()
 
 const searchUrl = '/:documentID/search/'
+const modByUrl = '/:documentID/mod/'
 
 // sección de busquedas
 checkStories.get(`${searchUrl}metro`, asyncHandler(async (req, res) => {
@@ -54,6 +61,11 @@ checkStories.get(`${searchUrl}all`, asyncHandler(async (req, res) => {
 }))
 
 
+//modificacion vía lista de rutas
+checkStories.get(`${modByUrl}`, asyncHandler(async (req, res) => {
+  const values = await searchAndUpdateArticlesBucle(req.params.documentID)
+  res.send(values)
+}))
 
 
 checkAuthors.get('/:documentID/check/authors', asyncHandler(async (req, res) => {

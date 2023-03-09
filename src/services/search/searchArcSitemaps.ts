@@ -1,10 +1,8 @@
-import { accessToGoogleSheets, updateAgroupOfValuesInSheet } from "../../subscribers/googleSheets"
 import { searchInSitemapByDate } from "../../subscribers/searchInSitemaps"
-import { msgProgressBar } from "../../types/progressBarMsgs"
-import { modLinkValues, linkValues, filterOptions } from "../../types/urlToVerify"
+import { modLinkValues } from "../../types/urlToVerify"
 import { allSites } from "../../utils/allSites"
 import { searchBarConfig } from "../../utils/barUtils"
-import { geIdentiflyUrl, genericFilter } from "../../utils/genericUtils"
+import { geIdentiflyUrl } from "../../utils/genericUtils"
 
 
 export const searchSitemaps =async (rowData:modLinkValues): Promise< modLinkValues | null > => {
@@ -44,7 +42,7 @@ export const searchSitemaps =async (rowData:modLinkValues): Promise< modLinkValu
   return null
 }
 
-const searchSitemapInBucle = async (rows: modLinkValues[]): Promise<modLinkValues[]> => {
+export const searchSitemapInBucle = async (rows: modLinkValues[]): Promise<modLinkValues[]> => {
   const rowsOfRedirect: modLinkValues[] = []
   let key: number = 0
   const progressRevisionOfSearch = searchBarConfig('Search URL in sitemaps')
@@ -59,35 +57,4 @@ const searchSitemapInBucle = async (rows: modLinkValues[]): Promise<modLinkValue
   }
   progressRevisionOfSearch.stop()
   return rowsOfRedirect
-}
-
-export const searchAndUpdateSitemapsInSheets = async (sheetId: string): Promise<linkValues[]|null> => {
-  try {
-    const urlList: linkValues[] = []
-    const rows = await accessToGoogleSheets(sheetId, 'Output')
-    if (rows !== undefined && rows !== null) {
-      const options: filterOptions = {
-        httpStatus: 400,
-        method: null,
-        type: 'any',
-        status: 'none'
-      }
-      const storiesList = genericFilter(rows, options)
-      const rowsOfRedirect = await searchSitemapInBucle(storiesList)
-      if (await rowsOfRedirect.length > 0) {
-        const barText: msgProgressBar = {
-          firstText: 'Guardando urls encontradas por fechas',
-          lastText: 'Url guardadas.'
-        }
-        await updateAgroupOfValuesInSheet(sheetId, rowsOfRedirect, barText)
-        return rowsOfRedirect
-      } else {
-        console.log('No se encontrarons links con fechas')
-      }
-    }
-    return urlList
-  } catch (error) {
-    console.error(error)
-    return null
-  }
 }

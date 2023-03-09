@@ -1,10 +1,8 @@
 import { searchInBucleArc } from "../../subscribers/arcSearch"
-import { accessToGoogleSheets, updateAgroupOfValuesInSheet } from "../../subscribers/googleSheets"
-import { msgProgressBar } from "../../types/progressBarMsgs"
-import { arcSimpleStory, filterOptions, linkValues, modLinkValues } from "../../types/urlToVerify"
+import { arcSimpleStory, modLinkValues } from "../../types/urlToVerify"
 import { allSites } from "../../utils/allSites"
 import { searchBarConfig } from "../../utils/barUtils"
-import { geIdentiflyUrl, delay, genericFilter } from "../../utils/genericUtils"
+import { geIdentiflyUrl, delay } from "../../utils/genericUtils"
 
 
 export const searchCirculate =async (linkData:modLinkValues):Promise < modLinkValues | null > => {
@@ -49,32 +47,3 @@ export const searchInArcCirculate = async (itemList: modLinkValues[]): Promise<m
     return findUrl
   }
 
-export const searchAndUpdateCirculateInSheets = async (sheetId: string): Promise<linkValues[]|null> => {
-    try {
-      const rows = await accessToGoogleSheets(sheetId, 'Output')
-      if (await rows !== undefined && await rows !== null) {
-        const options: filterOptions = {
-          httpStatus: 400,
-          method: null,
-          type: 'any',
-          status: 'none'
-        }
-        const rowsOfRedirect = genericFilter(rows, options)
-        const rowsToSaveInSheet = await searchInArcCirculate(rowsOfRedirect)
-        if (await rowsToSaveInSheet.length > 0) {
-          const barText: msgProgressBar = {
-            firstText: 'Update status URL in GoogleSheets',
-            lastText: 'Url encontradas en sitios de Arc.'
-          }
-          await updateAgroupOfValuesInSheet(sheetId, rowsToSaveInSheet, barText)
-          return rowsToSaveInSheet
-        } else {
-          console.log('No se encontrarons URL`s en Arc.')
-        }
-      }
-      return null
-    } catch (error) {
-      console.error(error)
-      return null
-    }
-}

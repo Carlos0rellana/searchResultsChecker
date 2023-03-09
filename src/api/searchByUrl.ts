@@ -1,6 +1,6 @@
 import express from "express";
 import asyncHandler from 'express-async-handler'
-import { searchByUrl } from "../services/search/servicesCompleteSearchUrls";
+import { searchByUrl } from "../services/search/searchAllPlacesUrls";
 
 export const searchPosibilitiesURL = express.Router()
 
