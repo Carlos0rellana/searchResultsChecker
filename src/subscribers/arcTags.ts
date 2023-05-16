@@ -8,7 +8,7 @@ export const getTagBySlug = async (tagId: string): Promise<minimalTag|null> => {
       const result = response.data
       if (result?.Payload !== undefined && result?.Payload.length > 0 && result?.Payload[0] !== null) {
         const value = result.Payload[0]
-        if(value?.slug!=="undefined"){
+        if (value?.slug !== 'undefined') {
           return {
             slug: value.slug ?? '',
             description: value.description ?? '',
@@ -40,8 +40,8 @@ export const validateTagBySlug = async (tagId: string): Promise<boolean> => {
 }
 
 export const makeAtagByslug = async (slugTag: string): Promise<any> => {
-  const data = JSON.stringify([{slug: slugTag}])
-  return await createInArc('/tags/add/',data)
+  const data = JSON.stringify([{ slug: slugTag }])
+  return await createInArc('/tags/add/', data)
     .then(function (_response) {
       return true
     })

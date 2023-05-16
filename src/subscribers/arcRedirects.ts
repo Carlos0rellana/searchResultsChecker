@@ -8,11 +8,11 @@ const allSites: SitesList = sitesData as SitesList
 
 export const makeRedirect = async (siteId: string, urlToFrom: string, urlToGo: string): Promise<false|string> => {
   const hostName = allSites[siteId]?.siteProperties.feedDomainURL
-  if (hostName !== undefined){
-    if(urlToFrom.includes(hostName)) {
+  if (hostName !== undefined) {
+    if (urlToFrom.includes(hostName)) {
       urlToFrom = new URL(urlToFrom).pathname
     }
-    if(urlToGo.includes(hostName)) {
+    if (urlToGo.includes(hostName)) {
       urlToGo = new URL(urlToGo).pathname
     }
 
@@ -29,20 +29,20 @@ export const makeRedirect = async (siteId: string, urlToFrom: string, urlToGo: s
     }
 
     return await createInArc(`/draft/v1/redirect/${siteId}/${urlToFrom}`, send)
-    .then(function (response) {
-      const result = response.data
-      if (result.create_at !== undefined) {
-        return true
-      } else if (result.error_code !== undefined) {
-        return result.error_code
-      } else {
+      .then(function (response) {
+        const result = response.data
+        if (result.create_at !== undefined) {
+          return true
+        } else if (result.error_code !== undefined) {
+          return result.error_code
+        } else {
+          return false
+        }
+      })
+      .catch(function (error) {
+        console.log('Error de redirección ====>', error)
         return false
-      }
-    })
-    .catch(function (error) {
-      console.log('Error de redirección ====>', error)
-      return false
-    })
+      })
   }
   return false
 }

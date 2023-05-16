@@ -1,10 +1,9 @@
-import { checkRedirect } from "../../subscribers/arcRedirects"
-import { accessToGoogleSheets, updateRowLinkValues } from "../../subscribers/googleSheets"
-import { modLinkValues, linkValues } from "../../types/urlToVerify"
-import { allSites } from "../../utils/allSites"
-import { searchBarConfig, checkBarConfig } from "../../utils/barUtils"
-import { geIdentiflyUrl, sanitizePathToWWWWpath, delay, getSimpleLinkValues, fetchData } from "../../utils/genericUtils"
-
+import { checkRedirect } from '../../subscribers/arcRedirects'
+import { accessToGoogleSheets, updateRowLinkValues } from '../../subscribers/googleSheets'
+import { modLinkValues, linkValues } from '../../types/urlToVerify'
+import { allSites } from '../../utils/allSites'
+import { searchBarConfig, checkBarConfig } from '../../utils/barUtils'
+import { geIdentiflyUrl, sanitizePathToWWWWpath, delay, getSimpleLinkValues, fetchData } from '../../utils/genericUtils'
 
 export const searchRedirect = async (linkData: modLinkValues): Promise <modLinkValues|null> => {
   if (linkData.url !== null) {

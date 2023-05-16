@@ -1,8 +1,8 @@
-import { updateGroupLinkValuesInSheet, accessToGoogleSheets } from "../../../subscribers/googleSheets"
-import { msgProgressBar } from "../../../types/progressBarMsgs"
-import { filterOptions, modLinkValues, linkValues } from "../../../types/urlToVerify"
-import { genericFilter } from "../../../utils/genericUtils"
-import { searchRedirectsBucle } from "../../search/searchArcRedirects"
+import { updateGroupLinkValuesInSheet, accessToGoogleSheets } from '../../../subscribers/googleSheets'
+import { msgProgressBar } from '../../../types/progressBarMsgs'
+import { filterOptions, modLinkValues, linkValues } from '../../../types/urlToVerify'
+import { genericFilter } from '../../../utils/genericUtils'
+import { searchRedirectsBucle } from '../../search/searchArcRedirects'
 
 const unificateUpdate = async (sheetId: string, barsConfig: {filter: filterOptions, update: msgProgressBar}, rows: string[][]|null): Promise<modLinkValues[]|null> => {
   if (rows !== null) {
@@ -17,7 +17,7 @@ const unificateUpdate = async (sheetId: string, barsConfig: {filter: filterOptio
   }
   return null
 }
-  
+
 const unificateCheckAndUpdate = async (sheetId: string, configFilter: filterOptions): Promise < modLinkValues[] | null > => {
   const rows = await accessToGoogleSheets(sheetId, 'Output')
   if (await rows !== null) {
@@ -35,7 +35,7 @@ const unificateCheckAndUpdate = async (sheetId: string, configFilter: filterOpti
   }
   return null
 }
-  
+
 export const searchAndUpdateExternalRedirectsInSheets = async (sheetId: string): Promise< linkValues[] | null > => {
   try {
     const filterData: filterOptions = {
@@ -50,7 +50,7 @@ export const searchAndUpdateExternalRedirectsInSheets = async (sheetId: string):
     return null
   }
 }
-  
+
 export const searchAndUpdateRedirectsInSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
     const filterData: filterOptions = {

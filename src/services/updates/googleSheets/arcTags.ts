@@ -1,8 +1,8 @@
-import { accessToGoogleSheets, updateGroupLinkValuesInSheet } from "../../../subscribers/googleSheets"
-import { msgProgressBar } from "../../../types/progressBarMsgs"
-import { linkValues, filterOptions } from "../../../types/urlToVerify"
-import { genericFilter } from "../../../utils/genericUtils"
-import { searchTagsInArcBucle } from "../../search/searchArcTags"
+import { accessToGoogleSheets, updateGroupLinkValuesInSheet } from '../../../subscribers/googleSheets'
+import { msgProgressBar } from '../../../types/progressBarMsgs'
+import { linkValues, filterOptions } from '../../../types/urlToVerify'
+import { genericFilter } from '../../../utils/genericUtils'
+import { searchTagsInArcBucle } from '../../search/searchArcTags'
 
 export const searchAndUpdateTagInSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
@@ -29,7 +29,7 @@ export const searchAndUpdateTagInSheets = async (sheetId: string): Promise<linkV
     }
     return null
   } catch (_error) {
-    //console.error(error)
+    // console.error(error)
     return null
   }
 }

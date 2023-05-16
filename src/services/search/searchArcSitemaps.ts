@@ -1,12 +1,11 @@
-import { searchInSitemapByDate } from "../../subscribers/searchInSitemaps"
-import { modLinkValues } from "../../types/urlToVerify"
-import { allSites } from "../../utils/allSites"
-import { searchBarConfig } from "../../utils/barUtils"
-import { geIdentiflyUrl } from "../../utils/genericUtils"
+import { searchInSitemapByDate } from '../../subscribers/searchInSitemaps'
+import { modLinkValues } from '../../types/urlToVerify'
+import { allSites } from '../../utils/allSites'
+import { searchBarConfig } from '../../utils/barUtils'
+import { geIdentiflyUrl } from '../../utils/genericUtils'
 
-
-export const searchSitemaps =async (rowData:modLinkValues): Promise< modLinkValues | null > => {
-  if(rowData.url !== null){
+export const searchSitemaps = async (rowData: modLinkValues): Promise< modLinkValues | null > => {
+  if (rowData.url !== null) {
     const datePattern = /[0-9]{4}\/[0-9]{2}\/[0-9]{2}/g
     const dateArticle = rowData.url?.match(datePattern)
     if (dateArticle !== null) {
@@ -34,7 +33,7 @@ export const searchSitemaps =async (rowData:modLinkValues): Promise< modLinkValu
           } else {
             rowData.status = 'date'
           }
-          return(rowData)
+          return (rowData)
         }
       }
     }
@@ -49,7 +48,7 @@ export const searchSitemapInBucle = async (rows: modLinkValues[]): Promise<modLi
   progressRevisionOfSearch.start(rows.length, 0)
   for (const urlValidate of rows) {
     const existInSitemap = await searchSitemaps(urlValidate)
-    if(existInSitemap !== null){
+    if (existInSitemap !== null) {
       rowsOfRedirect.push(existInSitemap)
     }
     key++

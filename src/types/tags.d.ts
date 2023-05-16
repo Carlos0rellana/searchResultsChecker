@@ -1,5 +1,5 @@
 export interface minimalTag {
-    description: string
-    slug: string
-    text: string
+  description: string
+  slug: string
+  text: string
 }

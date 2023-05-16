@@ -1,11 +1,10 @@
-import { searchInBucleArc } from "../../subscribers/arcSearch"
-import { arcSimpleStory, modLinkValues } from "../../types/urlToVerify"
-import { allSites } from "../../utils/allSites"
-import { searchBarConfig } from "../../utils/barUtils"
-import { geIdentiflyUrl, delay } from "../../utils/genericUtils"
+import { searchInBucleArc } from '../../subscribers/arcSearch'
+import { arcSimpleStory, modLinkValues } from '../../types/urlToVerify'
+import { allSites } from '../../utils/allSites'
+import { searchBarConfig } from '../../utils/barUtils'
+import { geIdentiflyUrl, delay } from '../../utils/genericUtils'
 
-
-export const searchCirculate =async (linkData:modLinkValues):Promise < modLinkValues | null > => {
+export const searchCirculate = async (linkData: modLinkValues): Promise < modLinkValues | null > => {
   if (linkData.url !== null) {
     const basicInfo = geIdentiflyUrl(linkData.url)
     const findURLinArc = await searchInBucleArc(basicInfo.siteId, basicInfo.storyTitle) as arcSimpleStory
@@ -22,28 +21,27 @@ export const searchCirculate =async (linkData:modLinkValues):Promise < modLinkVa
       return linkData
     }
   }
-  return null  
-} 
+  return null
+}
 
 export const searchInArcCirculate = async (itemList: modLinkValues[]): Promise<modLinkValues[]> => {
-    console.log('\nStart to search in Arc Sites:')
-    const findUrl: modLinkValues[] = []
-    if (itemList.length > 0) {
-      let key: number = 0
-      const progressRevisionOfSearch = searchBarConfig('Search in Arc Sites')
-  
-      progressRevisionOfSearch.start(itemList.length, 0)
-      for (const linkData of itemList) {
-        const tempData = await searchCirculate(linkData)
-        if(tempData!==null){
-          findUrl.push(tempData)
-          progressRevisionOfSearch.update(key)
-          await delay(2000)
-        }
-        key++
-      }
-      progressRevisionOfSearch.stop()
-    }
-    return findUrl
-  }
+  console.log('\nStart to search in Arc Sites:')
+  const findUrl: modLinkValues[] = []
+  if (itemList.length > 0) {
+    let key: number = 0
+    const progressRevisionOfSearch = searchBarConfig('Search in Arc Sites')
 
+    progressRevisionOfSearch.start(itemList.length, 0)
+    for (const linkData of itemList) {
+      const tempData = await searchCirculate(linkData)
+      if (tempData !== null) {
+        findUrl.push(tempData)
+        progressRevisionOfSearch.update(key)
+        await delay(2000)
+      }
+      key++
+    }
+    progressRevisionOfSearch.stop()
+  }
+  return findUrl
+}

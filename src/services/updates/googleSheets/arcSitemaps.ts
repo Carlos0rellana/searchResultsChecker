@@ -1,8 +1,8 @@
-import { accessToGoogleSheets, updateGroupLinkValuesInSheet } from "../../../subscribers/googleSheets"
-import { msgProgressBar } from "../../../types/progressBarMsgs"
-import { linkValues, filterOptions } from "../../../types/urlToVerify"
-import { genericFilter } from "../../../utils/genericUtils"
-import { searchSitemapInBucle } from "../../search/searchArcSitemaps"
+import { accessToGoogleSheets, updateGroupLinkValuesInSheet } from '../../../subscribers/googleSheets'
+import { msgProgressBar } from '../../../types/progressBarMsgs'
+import { linkValues, filterOptions } from '../../../types/urlToVerify'
+import { genericFilter } from '../../../utils/genericUtils'
+import { searchSitemapInBucle } from '../../search/searchArcSitemaps'
 
 export const searchAndUpdateSitemapsInSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {

@@ -1,11 +1,10 @@
-import { validateTagBySlug } from "../../subscribers/arcTags"
-import { accessToGoogleSheets, updateRowLinkValues} from "../../subscribers/googleSheets"
-import { modLinkValues, linkValues, filterOptions } from "../../types/urlToVerify"
-import { searchBarConfig } from "../../utils/barUtils"
-import { genericFilter, fetchData } from "../../utils/genericUtils"
+import { validateTagBySlug } from '../../subscribers/arcTags'
+import { accessToGoogleSheets, updateRowLinkValues } from '../../subscribers/googleSheets'
+import { modLinkValues, linkValues, filterOptions } from '../../types/urlToVerify'
+import { searchBarConfig } from '../../utils/barUtils'
+import { genericFilter, fetchData } from '../../utils/genericUtils'
 
-
-export const searchTag = async (tagItem: modLinkValues, forced:boolean): Promise<modLinkValues|null> => {
+export const searchTag = async (tagItem: modLinkValues, forced: boolean): Promise<modLinkValues|null> => {
   if (tagItem.url !== null) {
     let tagSlug: string
     if (tagItem.url.match(/\/tags?\//) !== null) {
@@ -17,13 +16,13 @@ export const searchTag = async (tagItem: modLinkValues, forced:boolean): Promise
     if (await validateTagBySlug(tagSlug)) {
       tagItem.solution = ['redirect']
       tagItem.probableSolution = `/tag/${tagSlug}`
-      tagItem.typeOfUrl='tag'
+      tagItem.typeOfUrl = 'tag'
       tagItem.status = 'process'
       return tagItem
-    } else if(forced===true){
+    } else if (forced) {
       tagItem.solution = ['create']
       tagItem.probableSolution = tagSlug
-      tagItem.typeOfUrl='tag'
+      tagItem.typeOfUrl = 'tag'
       tagItem.status = 'process'
       return tagItem
     }
@@ -39,7 +38,7 @@ export const searchTagsInArcBucle = async (itemList: modLinkValues[]): Promise<m
     const progressRevisionOfSearch = searchBarConfig('Search Tags in Arc')
     progressRevisionOfSearch.start(itemList.length, 0)
     for (const tagItem of itemList) {
-      const temp = await searchTag(tagItem,false)
+      const temp = await searchTag(tagItem, false)
       if (temp !== null) {
         findTags.push(temp)
       }

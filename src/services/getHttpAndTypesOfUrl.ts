@@ -5,12 +5,11 @@ import { fetchData, simpleRowData } from '../utils/genericUtils'
 import cliProgress from 'cli-progress'
 import colors from 'ansi-colors'
 
-
 export const checkUrlsStatusFromSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
     const start = new Date().getTime()
     const urlList: string[][] = []
-    const retuntList : linkValues[] = []
+    const retuntList: linkValues[] = []
     urlList.push(['URL', 'httpStatus', 'typeOfUrl', 'outputType', 'solution', 'method', 'status'])
     const rows = await simpleRowData(await accessToGoogleSheets(sheetId, 'Table'), 'URL')
     const progressRevision = new cliProgress.SingleBar({
@@ -43,8 +42,8 @@ export const checkUrlsStatusFromSheets = async (sheetId: string): Promise<linkVa
       progressRevision.stop()
     }
     await createGoogleSheet(urlList, 'Output', sheetId)
-    const end = (new Date().getTime() - start)/60000
-    console.log('\nTiempo de ejecución ===>',end,' min.\n')
+    const end = (new Date().getTime() - start) / 60000
+    console.log('\nTiempo de ejecución ===>', end, ' min.\n')
     return retuntList
   } catch (error) {
     console.error(error)

@@ -12,7 +12,7 @@ const compareRatio = (ratio: number, toSearch: string, toCompare: string): numbe
       count++
     }
   }
-  console.log(`${toSearch}<====>${toCompare}`)
+  // console.log(`${toSearch}<====>${toCompare}`)
   const finalRatio = count / wordList.length
   if (finalRatio > ratio) {
     return finalRatio
@@ -22,9 +22,9 @@ const compareRatio = (ratio: number, toSearch: string, toCompare: string): numbe
 
 export const searchInGoogleServiceApi = async (websiteId: string, toSearch: string, priority: typeOfLink|null = null): Promise< string | null> => {
   const idSearch = allSites[websiteId].siteProperties?.searchId !== undefined ? allSites[websiteId].siteProperties.searchId : null
-  console.log('\nse entra a API de Google\n')
-  if (idSearch === null) {
-    console.log('Sitio no tiene configurado CX en blocks.json')
+  // console.log('\nse entra a API de Google\n')
+  if (idSearch === null || idSearch === undefined) {
+    console.error('Sitio no tiene configurado CX en blocks.json')
     return null
   }
 
@@ -55,14 +55,14 @@ export const searchInGoogleServiceApi = async (websiteId: string, toSearch: stri
             }
           }
           const checkRatio = compareRatio(0.6, toSearch, searchItem)
-          console.log('=========>', checkRatio)
+          // console.log('=========>', checkRatio)
           if (checkRatio !== null) {
             ratioUrlList.push([searchItem, checkRatio])
           }
         }
-        console.log('========================')
-        console.log(ratioUrlList)
-        console.log('========================')
+        // console.log('========================')
+        // console.log(ratioUrlList)
+        // console.log('========================')
         return null
       }
       console.log()
