@@ -36,13 +36,13 @@ const getGlobalContetType = (check: string): typeOfLink | null => {
 
 const rudimentaryUrlDistribution = async (url: string): Promise<typeOfLink> => {
   const pathRoute = new URL(url).pathname
-  const lengthPath = pathRoute.replace(/^\//,'').replace(/\/$/, '').split('/').length
-  
-  if(lengthPath === 1){
+  const lengthPath = pathRoute.replace(/^\//, '').replace(/\/$/, '').split('/').length
+
+  if (lengthPath === 1) {
     return 'rare'
-  }else if(pathRoute.match(/\/categor(y|ia)\//) !== null){
+  } else if (pathRoute.match(/\/categor(y|ia)\//) !== null) {
     return 'section'
-  }else if (pathRoute.match(/\/tags?\//g) != null) {
+  } else if (pathRoute.match(/\/tags?\//g) != null) {
     return 'tag'
   } else if (pathRoute.match(/videos?/) !== null) {
     return 'video'
@@ -90,7 +90,7 @@ export const genericFilter = (itemList: string[][]|null, options: filterOptions)
     progressRevisionOfSearch.start(itemList.length, 0)
     for (const info of itemList) {
       const linkData: modLinkValues = getSimpleLinkValues(info, key)
-      const checkingType = options.type === 'any' ? (linkData.typeOfUrl === 'gallery' || linkData.typeOfUrl === 'story' || linkData.typeOfUrl === 'video' || linkData.typeOfUrl === 'search' || linkData.typeOfUrl === 'rare' ) : linkData.typeOfUrl === options.type
+      const checkingType = options.type === 'any' ? (linkData.typeOfUrl === 'gallery' || linkData.typeOfUrl === 'story' || linkData.typeOfUrl === 'video' || linkData.typeOfUrl === 'search' || linkData.typeOfUrl === 'rare') : linkData.typeOfUrl === options.type
       if (linkData.httpStatus !== null &&
           (options.method === null || linkData.solution?.includes(options.method) === true) &&
           linkData.httpStatus < options.httpStatus + 99 &&
@@ -140,11 +140,11 @@ export const sanitizePathToWWWWpath = (url: string, protocol: string|null = null
   return (pre + hostRoute + formatToUrl.pathname)
 }
 
-export const getSiteIdFromUrl = (url:URL): string => {
+export const getSiteIdFromUrl = (url: URL): string => {
   let tempSiteId = ''
   Object.entries(sitesData).forEach((element) => {
     const currenturl = element[1].siteProperties.feedDomainURL
-    if (currenturl.match(url.hostname)!==null) {
+    if (currenturl.match(url.hostname) !== null) {
       tempSiteId = element[0]
     }
   })
@@ -163,7 +163,7 @@ export const geIdentiflyUrl = (url: string): identitySearch => {
     siteId: getSiteIdFromUrl(URI),
     storyTitle: ''
   }
-  
+
   if (URI.pathname.match(/^\/autor\//) != null) {
     site.storyTitle = segmentedUrl[1]
   } else if (URI.pathname.match(attachment) != null) {
