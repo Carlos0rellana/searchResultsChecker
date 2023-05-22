@@ -40,13 +40,15 @@ const rudimentaryUrlDistribution = async (url: string): Promise<typeOfLink> => {
 
   if (lengthPath === 1) {
     return 'rare'
+  } else if (pathRoute.match(/%7B%7Burl%7D%7D/) !== null) {
+    return 'wrong-url'
   } else if (pathRoute.match(/\/categor(y|ia)\//) !== null) {
     return 'section'
   } else if (pathRoute.match(/\/tags?\//g) != null) {
     return 'tag'
   } else if (pathRoute.match(/videos?/) !== null) {
     return 'video'
-  } else if (pathRoute.match(/\/buscador\//) !== null) {
+  } else if (pathRoute.match(/\/buscador|search(.html)?\/?/) !== null) {
     return 'search'
   } else if ((pathRoute.match(/galerias?|fotos?/) != null)) {
     return 'gallery'

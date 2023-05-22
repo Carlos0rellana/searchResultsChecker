@@ -1,4 +1,4 @@
-type typeOfLink = 'redirect' | 'rare' | 'story' | 'author' | 'tag' | 'section' | 'video' | 'gallery' | 'file' | 'sitemap' | 'search' | 'any'
+type typeOfLink = 'redirect' | 'rare' | 'story' | 'author' | 'tag' | 'section' | 'video' | 'gallery' | 'file' | 'sitemap' | 'search'| 'wrong-url' | 'any'
 type statusCheck = 'none' | 'ok' | 'manual' | 'failed' | 'process' | 'waiting-ok' | 'google' | 'date' | 'arcTime' | 'recent' | 'metro' | 'olderRedirect' | 'circulate' | 'findUrlWithRedirectTo' | 'searchByTitle'
 type method = 'redirect' | 'overwrite' | 'resolver' | 'create' | 're-circulate' | 'clear' | null
 

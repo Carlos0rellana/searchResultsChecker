@@ -1,8 +1,23 @@
 import { searchInSitemapByDate } from '../../subscribers/searchInSitemaps'
-import { modLinkValues } from '../../types/urlToVerify'
+import { modLinkValues, statusCheck } from '../../types/urlToVerify'
 import { allSites } from '../../utils/allSites'
 import { searchBarConfig } from '../../utils/barUtils'
 import { geIdentiflyUrl } from '../../utils/genericUtils'
+
+const getUrlFromSitemap = async (hostName: string, dateFilter: string, storyTitle: string): Promise< string | null > => {
+  const feedUrl = `${hostName}/arc/outboundfeeds/sitemap/${dateFilter.replace(/\//g, '-')}?outputType=xml`
+  return await searchInSitemapByDate(feedUrl, storyTitle)
+}
+const getTimeSelector = (dateArticle: RegExpMatchArray): statusCheck => {
+  const year = Number(dateArticle[0].split('/')[0])
+  if (year >= 2022) {
+    return 'arcTime'
+  } else if (year >= 2016) {
+    return 'recent'
+  } else {
+    return 'date'
+  }
+}
 
 export const searchSitemaps = async (rowData: modLinkValues): Promise< modLinkValues | null > => {
   if (rowData.url !== null) {
@@ -20,20 +35,23 @@ export const searchSitemaps = async (rowData: modLinkValues): Promise< modLinkVa
             dateFilter = myArray[0]
           }
         }
-        const feedUrl = `${hostName}/arc/outboundfeeds/sitemap/${dateFilter.replace(/\//g, '-')}?outputType=xml`
-        const result = await searchInSitemapByDate(feedUrl, basicInfo.storyTitle)
+        const result = await getUrlFromSitemap(hostName, dateFilter, basicInfo.storyTitle)
         if (await result !== null) {
           rowData.solution = ['redirect']
           rowData.probableSolution = `${hostName}${result ?? ''}`
-          const year = Number(dateArticle[0].split('/')[0])
-          if (year >= 2022) {
-            rowData.status = 'arcTime'
-          } else if (year >= 2016) {
-            rowData.status = 'recent'
-          } else {
-            rowData.status = 'date'
-          }
+          rowData.status = getTimeSelector(dateArticle)
           return (rowData)
+        } else {
+          const excludeCurrentSite = Object.keys(allSites).filter(siteId => siteId !== basicInfo.siteId)
+          for (const siteId of excludeCurrentSite) {
+            const tempValue = await getUrlFromSitemap(siteId, dateFilter, basicInfo.storyTitle)
+            if (tempValue !== null) {
+              rowData.solution = ['re-circulate']
+              rowData.status = 'circulate'
+              rowData.probableSolution = `${hostName}${tempValue ?? ''}`
+              return (rowData)
+            }
+          }
         }
       }
     }
