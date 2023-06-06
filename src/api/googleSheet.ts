@@ -14,6 +14,7 @@ import { searchAndUpdateGoogleInSheets } from '../services/updates/googleSheets/
 import { searchAndUpdateMetroInSheets } from '../services/updates/googleSheets/metroDb'
 import { searchAndUpdatePosibilitiesInSheets } from '../services/updates/googleSheets/secuentialAll'
 import { searchAndUpdateArticlesBucle } from '../services/updates/updateArcArticle'
+import { generateAndUpdateGoogleUrlInSheets } from '../services/updates/googleSheets/googleLinkGenerator'
 
 export const showGoogleSheets = express.Router()
 export const checkAuthors = express.Router()
@@ -50,6 +51,11 @@ checkStories.get(`${searchUrl}tags`, asyncHandler(async (req, res) => {
 
 checkStories.get(`${searchUrl}circulate`, asyncHandler(async (req, res) => {
   const values = await searchAndUpdateCirculateInSheets(req.params.documentID)
+  res.send(values)
+}))
+
+checkStories.get(`${searchUrl}not-found`, asyncHandler(async (req, res) => {
+  const values = await generateAndUpdateGoogleUrlInSheets(req.params.documentID)
   res.send(values)
 }))
 
