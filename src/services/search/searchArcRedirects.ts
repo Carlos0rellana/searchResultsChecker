@@ -3,7 +3,7 @@ import { accessToGoogleSheets, updateRowLinkValues } from '../../subscribers/goo
 import { modLinkValues, linkValues } from '../../types/urlToVerify'
 import { allSites } from '../../utils/allSites'
 import { searchBarConfig, checkBarConfig } from '../../utils/barUtils'
-import { geIdentiflyUrl, sanitizePathToWWWWpath, delay, getSimpleLinkValues, fetchData } from '../../utils/genericUtils'
+import { geIdentiflyUrl, sanitizePathToWWWWpath, delay, getSimpleLinkValues, fetchData, linkValuesToString } from '../../utils/genericUtils'
 
 export const searchRedirect = async (linkData: modLinkValues): Promise <modLinkValues|null> => {
   if (linkData.url !== null) {
@@ -91,12 +91,12 @@ export const checkRedirectsFromSheets = async (sheetId: string): Promise<linkVal
           const httpResponseCheck = await fetchData(item.url)
           if (typeof httpResponseCheck.httpStatus === 'number' && httpResponseCheck.httpStatus < 400 && item.url !== 'undefined') {
             externalLink.status = 'ok'
-            await updateRowLinkValues(sheetId, 'Output', item.position, externalLink)
+            await updateRowLinkValues(sheetId, 'Output', item.position,linkValuesToString(externalLink))
           } else if (redirect !== null) {
             externalLink.status = 'manual'
             externalLink.probableSolution = redirect
             externalLink.solution = ['redirect', 'resolver']
-            await updateRowLinkValues(sheetId, 'Output', item.position, externalLink)
+            await updateRowLinkValues(sheetId, 'Output', item.position,linkValuesToString(externalLink))
           }
         }
         progressRevision.update(progressCount)

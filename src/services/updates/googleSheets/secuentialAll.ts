@@ -1,7 +1,7 @@
 import { accessToGoogleSheets, updateRowLinkValues } from '../../../subscribers/googleSheets'
 import { modLinkValues } from '../../../types/urlToVerify'
 import { checkBarConfig } from '../../../utils/barUtils'
-import { getSimpleLinkValues, delay } from '../../../utils/genericUtils'
+import { getSimpleLinkValues, delay, linkValuesToString } from '../../../utils/genericUtils'
 import { searchPosibilities } from '../../search/searchAllPlacesUrls'
 
 export const searchAndUpdatePosibilitiesInSheets = async (sheetId: string): Promise< modLinkValues[] | null > => {
@@ -17,7 +17,7 @@ export const searchAndUpdatePosibilitiesInSheets = async (sheetId: string): Prom
         const linkData: modLinkValues = getSimpleLinkValues(info, key)
         const tempValues = await searchPosibilities(linkData)
         if (tempValues !== null) {
-          await updateRowLinkValues(sheetId, 'Output', tempValues.position, tempValues)
+          await updateRowLinkValues(sheetId, 'Output', tempValues.position, linkValuesToString(tempValues))
           results.push(tempValues)
           await delay(1000)
         }

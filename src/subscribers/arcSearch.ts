@@ -1,46 +1,70 @@
 import { AxiosResponse } from 'axios'
 import { SitesList } from '../types/sites'
 import sitesData from '../config/static_data/blocks.json'
-import { arcSimpleStory, typeOfLink } from '../types/urlToVerify'
+import { arcExposeStory, arcSimpleStory, typeOfLink } from '../types/urlToVerify'
 import { ratioElementsOptions, searchInArcItemOptions } from '../types/config'
 import { ratioWords } from '../utils/genericUtils'
 import { getAsyncWebGrammarly, getAListOfPossiblesTitles } from '../subscribers/grammarly'
 import { getDataFromArc } from '../models/getDataFromArc'
 
-const iterativeQuery = async (queryString: string): Promise <AxiosResponse|null> => {
+export const iterativeSearchQuery = async (queryString: string): Promise <AxiosResponse|null> => {
   for (let x = 0; x < 10; x++) {
     try {
-      await getDataFromArc(queryString)
+      const item = await getDataFromArc(queryString)
         .then(function (response) {
           return response
         })
+      if(item.data!==null){
+        return item
+      }
     } catch (_error) {
-      // console.log(_error)
       return null
     }
   }
   return null
 }
 
-const searchInArc = async (siteId: string, searchQuery: string, from: string = '0', size: string = '100'): Promise<arcSimpleStory[]|null> => {
+const searchStoryByAny = async (queryString:string,siteId:string,from:number=0):Promise <any[]> => {
+  let result: any = await iterativeSearchQuery(`${queryString}&from=${from}&size=100`)
+  let resultList = result?.data?.content_elements || [] 
+  if(result?.data?.next!==undefined){
+    const checkNextSearch = await searchStoryByAny(queryString,siteId,result.data.next)
+    resultList.concat(checkNextSearch)
+  }
+  return resultList
+}
+
+export const getArcExposeStorySearch =async (queryString:string,siteId:string):Promise <arcExposeStory[]> => {
+  const searchResults = await searchStoryByAny(queryString,siteId)
+  const resultList: arcExposeStory[] = []
+  if ( searchResults.length > 0 ) {
+    for (const story of searchResults) {
+      const tempStory : arcExposeStory  = {
+        url:story.websites[siteId].website_url??'notFound',
+        site:siteId,
+        id:story._id??'none',
+        composerUrl:story._id!==undefined?`https://metroworldnews.arcpublishing.com/composer/edit/${story._id}`:'none'
+      }
+      resultList.push(tempStory)
+    }
+  }
+  return resultList
+}
+
+const searchInArc = async (siteId: string, searchQuery: string): Promise<arcSimpleStory[]|null> => {
   const returnValues = '_id,website_url,websites,canonical_url,headlines.basic,type'
-  const queryString = `/content/v4/search/published?website=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}&from=${from}&size=${size}`
-  const result: any = await iterativeQuery(queryString)
-  if (result?.data?.content_elements !== undefined) {
+  const queryString = `/content/v4/search/published?website=${siteId}&q=${searchQuery}&_sourceInclude=${returnValues}`
+  const result: any = await searchStoryByAny(queryString,siteId)
+  if (result.length>0) {
+    const resultQueryList = result?.data?.content_elements || undefined
+    const resultList: arcSimpleStory[] = []
     const isSearchByTitle = searchQuery.match(/headlines.basic:/) !== null
-    if (result.content_elements !== undefined && result.content_elements.length > 0) {
-      const resultList: arcSimpleStory[] = []
-      console.log(result)
-      for (const story of result.content_elements) {
+    if (resultQueryList !== undefined && resultQueryList.length > 0) {
+      for (const story of resultQueryList) {
         const tempStory = restructureAarcSimpleStory(siteId, story, isSearchByTitle)
         resultList.push(tempStory)
       }
-      console.log(resultList)
       return resultList
-    } else if (result.error_code !== undefined) {
-      return null
-    } else {
-      return null
     }
   }
   return null
@@ -205,7 +229,7 @@ export const searchInBucleArc = async (siteId: string, search: string, currentPr
   if (find === false) {
     const title = search.replace(/-/g, ' ')
     const generaTitulos = getAListOfPossiblesTitles(title)
-    console.log('\nStart search by all posibilities titles ')
+    // console.log('\nStart search by all posibilities titles ')
     for (let x = 0; x < generaTitulos.result.length; x++) {
       const titulo: string = generaTitulos.result[x]
       const input = {

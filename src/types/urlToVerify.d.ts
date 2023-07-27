@@ -1,6 +1,6 @@
 type typeOfLink = 'redirect' | 'rare' | 'story' | 'author' | 'tag' | 'section' | 'video' | 'gallery' | 'file' | 'sitemap' | 'search'| 'wrong-url' | 'any'
 type statusCheck = 'none' | 'ok' | 'manual' | 'failed' | 'process' | 'waiting-ok' | 'google' | 'date' | 'arcTime' | 'recent' | 'metro' | 'olderRedirect' | 'circulate' | 'findUrlWithRedirectTo' | 'searchByTitle'
-type method = 'redirect' | 'overwrite' | 'resolver' | 'create' | 're-circulate' | 'clear' | null
+type method = 'redirect' | 'overwrite' | 'resolver' | 'create' | 're-circulate' | 'clear' | 'search-google' | null
 
 export interface filterOptions {
   httpStatus: number
@@ -35,10 +35,13 @@ export interface modLinkValues extends linkValues {
   position: number
 }
 
-export interface arcSimpleStory {
+export interface arcSimple {
   url: string
   site: string
   id: string
+}
+
+export interface arcSimpleStory extends arcSimple {
   type: typeOfLink
   title: string
   isTitleByIteration: boolean = false
@@ -46,6 +49,10 @@ export interface arcSimpleStory {
 
 export interface arcReCirculate extends arcSimpleStory {
   method: method
+}
+
+export interface arcExposeStory extends arcSimple {
+  composerUrl: string
 }
 
 export interface ortographyChecker {

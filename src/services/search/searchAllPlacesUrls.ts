@@ -1,5 +1,5 @@
-import { linkValues, modLinkValues } from '../../types/urlToVerify'
-import { fetchData } from '../../utils/genericUtils'
+import { linkValues, modLinkValues } from '../../types/urlToVerify';
+import { fetchData, noSolution } from '../../utils/genericUtils'
 import { searchCirculate } from './searchArcCirculate'
 import { searchRedirect } from './searchArcRedirects'
 import { searchSection } from './searchArcSection'
@@ -7,11 +7,13 @@ import { searchSitemaps } from './searchArcSitemaps'
 import { searchTag } from './searchArcTags'
 import { searchMetro } from './searchMetroDb'
 
+
+
 export const searchPosibilities = async (linkData: modLinkValues): Promise < modLinkValues | null > => {
   if (linkData.url !== null && linkData.status === 'none') {
     switch (linkData.typeOfUrl) {
       case 'search':
-        linkData.probableSolution = '/buscador/'
+        linkData.probableSolution = '/buscador/';
         return linkData
       case 'tag' :
         return await searchTag(linkData, true)
@@ -25,7 +27,7 @@ export const searchPosibilities = async (linkData: modLinkValues): Promise < mod
       case 'any':
         return (await searchRedirect(linkData) ?? await searchSitemaps(linkData) ?? await searchMetro(linkData) ?? await searchCirculate(linkData))
       default:
-        return null
+        return noSolution(linkData) 
     }
   }
   return null

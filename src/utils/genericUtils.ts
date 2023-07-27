@@ -7,6 +7,7 @@ import { ratioElementsOptions } from '../types/config'
 
 import { linkValues, filterOptions, typeOfLink, modLinkValues, method, statusCheck } from '../types/urlToVerify'
 import { settingBar } from './barUtils'
+import { getGoogleSearchUrl } from '../services/sendTo/sendToGoogle'
 
 const getGlobalContetType = (check: string): typeOfLink | null => {
   const find = 'Fusion.globalContent='
@@ -76,6 +77,27 @@ const getOutputTypeFromUrl = (url: string): string => {
     }
   }
   return outputType
+}
+
+export const linkValuesToString = (externalLink:linkValues) => {
+  return [
+    `${String(externalLink.url)}`,
+    `${String(externalLink.httpStatus)}`,
+    `${String(externalLink.typeOfUrl)}`,
+    `${String(externalLink.outputType)}`,
+    `${String(externalLink.probableSolution)}`,
+    `${String(externalLink.solution?.join())}`,
+    `${String(externalLink.status)}`
+  ]
+}
+
+export const noSolution = (linkData:modLinkValues): modLinkValues =>{
+  if(linkData.url!==null){
+    linkData.probableSolution = getGoogleSearchUrl(geIdentiflyUrl(linkData.url))
+    linkData.solution = ['search-google']
+    linkData.status = 'manual'
+  }
+  return linkData
 }
 
 export const genericFilter = (itemList: string[][]|null, options: filterOptions): modLinkValues[] => {
@@ -161,17 +183,23 @@ export const geIdentiflyUrl = (url: string): identitySearch => {
   const galeria = /\/galeria\/$/
   const video = /\/video\/$/
   const attachment = /\/attachment\/(.*)?\/?$/
+  const embed = /\/o?embed\/?$/
   const site: identitySearch = {
     siteId: getSiteIdFromUrl(URI),
     storyTitle: ''
   }
 
+  const delimiterPathern = (url:string,delimiter:RegExp): string => {
+    const filter = url.split(delimiter)[0].split('/')
+    return filter[filter.length-1]
+  }
+
   if (URI.pathname.match(/^\/autor\//) != null) {
     site.storyTitle = segmentedUrl[1]
   } else if (URI.pathname.match(attachment) != null) {
-    const stepOne = URI.pathname.split('/attachment/')[0]
-    const stepTwo = stepOne.split('/')
-    site.storyTitle = stepTwo[stepTwo.length - 1]
+    site.storyTitle = delimiterPathern(URI.pathname,attachment)
+  } else if (URI.pathname.match(embed) != null) {
+    site.storyTitle = delimiterPathern(URI.pathname,embed)
   } else if ((URI.pathname.match(roxen) != null) || (URI.pathname.match(video) != null) || (URI.pathname.match(galeria) != null)) {
     site.storyTitle = segmentedUrl[segmentedUrl.length - 3]
   } else if (URI.pathname.match(/\/$/) !== null) {

@@ -1,8 +1,9 @@
-import { accessToGoogleSheets, updateGroupLinkValuesInSheet } from '../../../subscribers/googleSheets'
+import { accessToGoogleSheets, updateRowLinkValues } from '../../../subscribers/googleSheets'
 import { msgProgressBar } from '../../../types/progressBarMsgs'
 import { linkValues, filterOptions } from '../../../types/urlToVerify'
-import { genericFilter } from '../../../utils/genericUtils'
-import { searchInArcCirculate } from '../../search/searchArcCirculate'
+import { searchBarConfig } from '../../../utils/barUtils'
+import { genericFilter, linkValuesToString } from '../../../utils/genericUtils'
+import { searchCirculate } from '../../search/searchArcCirculate'
 
 export const searchAndUpdateCirculateInSheets = async (sheetId: string): Promise<linkValues[]|null> => {
   try {
@@ -15,14 +16,21 @@ export const searchAndUpdateCirculateInSheets = async (sheetId: string): Promise
         status: 'none'
       }
       const rowsOfRedirect = genericFilter(rows, options)
-      const rowsToSaveInSheet = await searchInArcCirculate(rowsOfRedirect)
-      if (await rowsToSaveInSheet.length > 0) {
+      if (await rowsOfRedirect.length > 0) {
+        let searchListQty = 0
         const barText: msgProgressBar = {
-          firstText: 'Update status URL in GoogleSheets',
+          firstText: 'Update status URL in GoogleSheets ✍️',
           lastText: 'Url encontradas en sitios de Arc.'
         }
-        await updateGroupLinkValuesInSheet(sheetId, rowsToSaveInSheet, barText)
-        return rowsToSaveInSheet
+        const progressRevisionOfSearch = searchBarConfig(barText.firstText)
+        progressRevisionOfSearch.start(rowsOfRedirect.length,searchListQty)
+        for(const arcStory of rowsOfRedirect){
+          const result = await searchCirculate(arcStory)
+          await updateRowLinkValues(sheetId,'Output',arcStory.position,linkValuesToString(result))
+          searchListQty++
+          progressRevisionOfSearch.update(searchListQty)
+        }
+        progressRevisionOfSearch.stop()
       } else {
         console.log('No se encontrarons URL`s en Arc.')
       }

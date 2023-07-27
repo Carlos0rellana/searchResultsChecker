@@ -1,9 +1,9 @@
 import { identitySearch } from "../../types/sites"
 import { modLinkValues } from "../../types/urlToVerify"
 import { searchBarConfig } from "../../utils/barUtils"
-import { geIdentiflyUrl } from "../../utils/genericUtils"
+import { noSolution } from "../../utils/genericUtils"
 
-const getGoogleSearchUrl = (item: identitySearch): string => {
+export const getGoogleSearchUrl = (item: identitySearch): string => {
   return `https://www.google.com/search?q=${item.storyTitle.replace(/-/g,'+')}`
 }
 
@@ -17,8 +17,7 @@ export const generateGoogleSearchLinks = (itemList: modLinkValues[]): modLinkVal
     for (const linkData of itemList) {
       if (linkData.url !== null) {
         let tempData:modLinkValues = linkData
-        tempData.probableSolution = getGoogleSearchUrl(geIdentiflyUrl(linkData.url))
-        findUrl.push(tempData)
+        findUrl.push(noSolution(tempData))
         progressRevisionOfGenerate.update(key)
       }
       key++

@@ -24,18 +24,19 @@ const bucleConfirm = (word: string): string => {
   return word
 }
 
-const bucleGeneratorTitles = (word: string): any[] => {
-  const result: any[] = []
+const bucleGeneratorTitles = (word: string): string[] => {
+  const result: string[] = []
   result.push(word)
   for (let letter = 0; letter < word.length; letter++) {
     if (word[letter].match(/^[aeiouúAEIOUÚ]/) !== null) {
       const currentWord = word.substring(0, letter) + checkVocals(word[letter]) + word.substring(letter + 1)
-      console.log(currentWord)
+      //console.log(currentWord)
       if (dictionary.check(currentWord)) {
         result.push(currentWord)
       }
     }
   }
+  // console.log(result)
   return result
 }
 

@@ -2,7 +2,7 @@ import { validateTagBySlug } from '../../subscribers/arcTags'
 import { accessToGoogleSheets, updateRowLinkValues } from '../../subscribers/googleSheets'
 import { modLinkValues, linkValues, filterOptions } from '../../types/urlToVerify'
 import { searchBarConfig } from '../../utils/barUtils'
-import { genericFilter, fetchData } from '../../utils/genericUtils'
+import { genericFilter, fetchData, linkValuesToString } from '../../utils/genericUtils'
 
 export const searchTag = async (tagItem: modLinkValues, forced: boolean): Promise<modLinkValues|null> => {
   if (tagItem.url !== null) {
@@ -75,7 +75,7 @@ export const checkTagsFromSheets = async (sheetId: string): Promise<linkValues[]
             } else {
               currentTagValues.status = 'ok'
             }
-            await updateRowLinkValues(sheetId, 'Output', tagLink.position, currentTagValues)
+            await updateRowLinkValues(sheetId, 'Output', tagLink.position,linkValuesToString(currentTagValues))
             urlList.push(currentTagValues)
           }
         }

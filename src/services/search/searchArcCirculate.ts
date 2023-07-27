@@ -2,9 +2,9 @@ import { searchInBucleArc } from '../../subscribers/arcSearch'
 import { arcSimpleStory, modLinkValues } from '../../types/urlToVerify'
 import { allSites } from '../../utils/allSites'
 import { searchBarConfig } from '../../utils/barUtils'
-import { geIdentiflyUrl, delay } from '../../utils/genericUtils'
+import { geIdentiflyUrl, delay, noSolution } from '../../utils/genericUtils'
 
-export const searchCirculate = async (linkData: modLinkValues): Promise < modLinkValues | null > => {
+export const searchCirculate = async (linkData: modLinkValues): Promise < modLinkValues > => {
   if (linkData.url !== null) {
     const basicInfo = geIdentiflyUrl(linkData.url)
     const findURLinArc = await searchInBucleArc(basicInfo.siteId, basicInfo.storyTitle) as arcSimpleStory
@@ -21,7 +21,7 @@ export const searchCirculate = async (linkData: modLinkValues): Promise < modLin
       return linkData
     }
   }
-  return null
+  return noSolution(linkData)
 }
 
 export const searchInArcCirculate = async (itemList: modLinkValues[]): Promise<modLinkValues[]> => {

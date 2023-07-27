@@ -1,5 +1,5 @@
 import { accessToGoogleSheets, updateRowLinkValues } from '../subscribers/googleSheets'
-import { geIdentiflyUrl, getSimpleLinkValues } from '../utils/genericUtils'
+import { geIdentiflyUrl, getSimpleLinkValues, linkValuesToString } from '../utils/genericUtils'
 import { linkValues, modLinkValues } from '../types/urlToVerify'
 // import sitesData from '../config/static_data/blocks.json'
 
@@ -59,7 +59,7 @@ export const proccessRedirectsFromSheets = async (sheetId: string): Promise<link
           if (await firstRedirect !== false || await lastRedirect !== false) {
             urlList.push(externalLink)
             console.log('testing')
-            await updateRowLinkValues(sheetId, 'Output', item.position, externalLink)
+            await updateRowLinkValues(sheetId, 'Output', item.position, linkValuesToString(externalLink))
           }
         }
         progressCount++
@@ -110,7 +110,7 @@ export const proccessTagsFromSheets = async (sheetId: string): Promise<linkValue
           const externalLink = item as linkValues
           if (await makeAtagByslug(item.probableSolution) === true) {
             externalLink.status = 'waiting-ok'
-            await updateRowLinkValues(sheetId, 'Output', item.position, externalLink)
+            await updateRowLinkValues(sheetId, 'Output', item.position, linkValuesToString(externalLink))
           }
         }
         progressCount++
@@ -168,7 +168,7 @@ export const deleteRedirectsFromSheets = async (sheetId: string): Promise<linkVa
           if (await firstRedirect && await lastRedirect) {
             externalLink.status = 'process'
             externalLink.solution = ['redirect']
-            await updateRowLinkValues(sheetId, 'Output', item.position, externalLink)
+            await updateRowLinkValues(sheetId, 'Output', item.position,linkValuesToString(externalLink))
           }
         }
         progressRevision.update(progressCount)

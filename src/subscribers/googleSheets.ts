@@ -4,7 +4,7 @@ import { GoogleAuth } from 'googleapis-common'
 import { linkValues, modLinkValues } from '../types/urlToVerify'
 import { msgProgressBar } from '../types/progressBarMsgs'
 
-import { delay } from '../utils/genericUtils'
+import { delay, linkValuesToString } from '../utils/genericUtils'
 import { checkBarConfig } from '../utils/barUtils'
 
 const googleInfo = {
@@ -121,17 +121,8 @@ export const updateRowData = async (spreadSheetId: string, sheetName: string, po
   return result
 }
 
-export const updateRowLinkValues = async (spreadSheetId: string, sheetName: string, position: number, dataValues: linkValues): Promise<any> => {
-  const dataToStringArray = [
-    `${String(dataValues.url)}`,
-    `${String(dataValues.httpStatus)}`,
-    `${String(dataValues.typeOfUrl)}`,
-    `${String(dataValues.outputType)}`,
-    `${String(dataValues.probableSolution)}`,
-    `${String(dataValues.solution?.join())}`,
-    `${String(dataValues.status)}`
-  ]
-  return await updateRowData(spreadSheetId, sheetName, position, dataToStringArray)
+export const updateRowLinkValues = async (spreadSheetId: string, sheetName: string, position: number, dataValues:string[]): Promise<any> => {
+  return await updateRowData(spreadSheetId, sheetName, position, dataValues)
 }
 
 export const updateGroupLinkValuesInSheet = async (sheetId: string, urlListToMod: modLinkValues[], textForBar: msgProgressBar): Promise<boolean> => {
@@ -142,7 +133,8 @@ export const updateGroupLinkValuesInSheet = async (sheetId: string, urlListToMod
     for (const item of urlListToMod) {
       if (item.url !== null) {
         const externalLink: linkValues = item as linkValues
-        await updateRowLinkValues(sheetId, 'Output', item.position, externalLink)
+        const dataToStringArray = linkValuesToString(externalLink)
+        await updateRowLinkValues(sheetId, 'Output', item.position, dataToStringArray)
         await delay(1000)
       }
       progressRevision.update(progressCount)

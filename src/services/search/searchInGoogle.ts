@@ -4,7 +4,7 @@ import { identitySearch } from '../../types/sites'
 import { modLinkValues, linkValues } from '../../types/urlToVerify'
 import { allSites } from '../../utils/allSites'
 import { searchBarConfig, checkBarConfig } from '../../utils/barUtils'
-import { geIdentiflyUrl, delay, getSimpleLinkValues } from '../../utils/genericUtils'
+import { geIdentiflyUrl, delay, getSimpleLinkValues, linkValuesToString } from '../../utils/genericUtils'
 
 export const searchInGoogle = async (itemList: modLinkValues[]): Promise<modLinkValues[]> => {
   console.log('\nStart to search in Google:')
@@ -69,7 +69,7 @@ export const check404inGoogle = async (sheetId: string): Promise<linkValues[]|nu
                 rowData.status = 'google'
                 currentListModValues.push(rowData)
                 const linkData = rowData as linkValues
-                await updateRowLinkValues(sheetId, 'Output', rowData.position, linkData)
+                await updateRowLinkValues(sheetId, 'Output', rowData.position,linkValuesToString(linkData))
               }
             }
             await delay(2000)

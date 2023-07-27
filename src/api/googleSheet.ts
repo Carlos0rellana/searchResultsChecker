@@ -15,6 +15,9 @@ import { searchAndUpdateMetroInSheets } from '../services/updates/googleSheets/m
 import { searchAndUpdatePosibilitiesInSheets } from '../services/updates/googleSheets/secuentialAll'
 import { searchAndUpdateArticlesBucle } from '../services/updates/updateArcArticle'
 import { generateAndUpdateGoogleUrlInSheets } from '../services/updates/googleSheets/googleLinkGenerator'
+import { searchStoriesByTag } from '../services/generateLists/createBytags'
+import { searchStoriesByAuthor } from '../services/generateLists/createByAuthor'
+import { updateResultsStories } from '../services/updates/googleSheets/saveSearchStoriesBy'
 
 export const showGoogleSheets = express.Router()
 export const checkAuthors = express.Router()
@@ -22,6 +25,7 @@ export const checkStories = express.Router()
 
 const searchUrl = '/:documentID/search/'
 const modByUrl = '/:documentID/mod/'
+const createByUrl = '/:documentID/create/'
 
 // sección de busquedas
 checkStories.get(`${searchUrl}metro`, asyncHandler(async (req, res) => {
@@ -67,6 +71,17 @@ checkStories.get(`${searchUrl}all`, asyncHandler(async (req, res) => {
 // modificacion vía lista de rutas
 checkStories.get(`${modByUrl}`, asyncHandler(async (req, res) => {
   const values = await searchAndUpdateArticlesBucle(req.params.documentID)
+  res.send(values)
+}))
+//creacion de listas según busquedas
+checkStories.get(`${createByUrl}:siteId/tag/:tagSlug`, asyncHandler(async (req, res) => {
+  const values = await searchStoriesByTag(req.params.siteId,req.params.tagSlugD)
+  updateResultsStories(req.params.documentID,'Elements',values)
+  res.send(values)
+}))
+checkStories.get(`${createByUrl}:siteId/author/:authorSlug`, asyncHandler(async (req, res) => {
+  const values = await searchStoriesByAuthor(req.params.siteId,req.params.authorSlug)
+  updateResultsStories(req.params.documentID,'Elements',values)
   res.send(values)
 }))
 
